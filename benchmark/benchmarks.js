@@ -2,6 +2,7 @@ const benchmarkToolFio = document.querySelector('#benchmark-tool-fio');
 const benchmarkToolIozone = document.querySelector('#benchmark-tool-iozone');
 const benchmarkTypeThroughput = document.querySelector('#benchmark-type-throughput');
 const benchmarkTypeIops = document.querySelector('#benchmark-type-iops');
+const benchmarkTypeSpectrum = document.querySelector('#benchmark-type-spectrum');
 const benchmarkSize = document.querySelector('#benchmark-size');
 const benchmarkPath = document.querySelector('#benchmark-path');
 const benchmarkProcessingSpinner = document.querySelector('#benchmark-processing-spinner');
@@ -11,7 +12,35 @@ const launchBenchmarkBtn = document.querySelector('#launch-benchmark');
 
 const benchmarkOutput = document.querySelector('#benchmark-output');
 
+const benchmarkChartSwitcher = document.querySelector('#benchmark-chart-switcher');
+const chartTypeIops = document.querySelector('#chart-type-iops');
+const chartTypeBandwidth = document.querySelector('#chart-type-bandwidth');
+
 let benchmarkChart = null;
+let benchmarkChartData = null;
+
+chartTypeIops.addEventListener('input', event => {
+    if (event.target.checked) {
+        displayBenchmarkOutputChartMany(benchmarkChartData, benchmarkChart.data.labels, 'iops');
+    }
+});
+
+chartTypeBandwidth.addEventListener('input', event => {
+    if (event.target.checked) {
+        displayBenchmarkOutputChartMany(benchmarkChartData, benchmarkChart.data.labels, 'bandwidth');
+    }
+});
+
+benchmarkToolFio.addEventListener('input', () => {
+    benchmarkTypeSpectrum.removeAttribute('disabled');
+});
+
+benchmarkToolIozone.addEventListener('change', event => {
+    if (event.target.checked) {
+        benchmarkTypeSpectrum.checked = false;
+        benchmarkTypeSpectrum.disabled = true;
+    }
+});
 
 benchmarkForm.addEventListener('submit', e => e.preventDefault());
 
@@ -32,6 +61,7 @@ launchBenchmarkBtn.addEventListener('click', async () => {
     
     if (benchmarkTypeThroughput.checked) recordSize = '1M';
     if (benchmarkTypeIops.checked) recordSize = '4k';
+    if (benchmarkTypeSpectrum.checked) recordSize = '4k-1M';
 
     if (!recordSize) {
         showErrorAlert('You did not provide a benchmark type.');
@@ -60,16 +90,20 @@ launchBenchmarkBtn.addEventListener('click', async () => {
     benchmarkProcessingSpinner.classList.remove('hidden');
 
     if (benchmarkChart) {
-        benchmarkChart.destroy();
         benchmarkOutput.classList.add('hidden');
+        benchmarkChartSwitcher.classList.add('hidden');
     }
 
     if (toolName === 'iozone') {
         iozoneBenchmark(threadCount, recordSize, fileSize);
     }
 
-    if (toolName === 'fio') {
-        fioBenchmark(threadCount, recordSize, fileSize, testPath);
+    if (toolName === 'fio' && !benchmarkTypeSpectrum.checked) {
+        genericFIOBenchmark(threadCount, recordSize, fileSize, testPath);
+    }
+
+    if (toolName === 'fio' && benchmarkTypeSpectrum.checked) {
+        spectrumFIOBenchmark(threadCount, ['4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M'], fileSize, testPath);
     }
 });
 
@@ -131,11 +165,10 @@ async function iozoneBenchmark(threadCount, recordSize, fileSize) {
 
     benchmarkOutput.classList.remove('hidden');
 
-    displayBenchmarkOutput(output);
-    displayBenchmarkOutputChart(output);
+    displayBenchmarkOutputChart(output, recordSize);
 }
 
-async function fioBenchmark(threadCount, recordSize, fileSize, testPath) {
+async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) {
     const runtime = 5;
     const typeLut = ['write', 'read', 'randread', 'randwrite'];
 
@@ -193,8 +226,72 @@ async function fioBenchmark(threadCount, recordSize, fileSize, testPath) {
 
     benchmarkOutput.classList.remove('hidden');
 
-    displayBenchmarkOutput(output);
-    displayBenchmarkOutputChart(output);
+    displayBenchmarkOutputChart(output, recordSize);
+}
+
+async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath) {
+    const runtime = 2;
+    const typeLut = ['write', 'read', 'randread', 'randwrite'];
+
+    let fioOutputs = {};
+    let finalOutput = [];
+
+    let escapedError = false;
+
+    let sizeIndex = 0;
+
+    while (sizeIndex < recordSizes.length) {
+        let idx = 0;
+
+        let recordSize = recordSizes[sizeIndex];
+
+        fioOutputs[recordSize] = {};
+
+        while (idx < 4) {
+            try {
+                let args = ['fio', '--directory', testPath, '--name', `zfs.fio.${recordSize}.${idx}`, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
+        
+                let data = await cockpit.spawn(args, { err: 'out', superuser: 'require' });
+                
+                fioOutputs[recordSize][idx] = parseFioOutput(data, typeLut[idx].includes('read') ? 'read' : 'write');
+            } catch (error) {
+                console.log(error);
+                escapedError = true;
+                break;
+            }
+    
+            idx += 1;
+        }
+
+        let output = {
+            writes: null,
+            reads: null,
+            randomReads: null,
+            randomWrites: null,
+        };
+
+        output['writes'] = fioOutputs[recordSize][0];
+        output['reads'] = fioOutputs[recordSize][1];
+        output['randomReads'] = fioOutputs[recordSize][2];
+        output['randomWrites'] = fioOutputs[recordSize][3];
+
+        finalOutput.push(output);
+
+        sizeIndex += 1;
+    }
+    
+    benchmarkProcessingSpinner.classList.add('hidden');
+
+    if (escapedError) {
+        showErrorAlert('The benchmark ended with a failed state.');
+        return;
+    }
+
+    showSuccessAlert('The benchmark has been completed.');
+
+    benchmarkOutput.classList.remove('hidden');
+
+    displayBenchmarkOutputChartMany(finalOutput, recordSizes);
 }
 
 function bytesToLargest(x) {
@@ -222,6 +319,7 @@ function bytesToLargest(x) {
 
 function splitNumberLetter(x, provideAvailable) {
     if (!x) return null;
+    x = x.toString();
     let number = x.match(/\d*\.?\d*/g)?.join('');
     let string = x.replace(/\d*\.?\d*/g, '');
     if ((!number || !string) && !provideAvailable) return null;
@@ -335,24 +433,39 @@ function displayBenchmarkOutput(data) {
     benchmarkOutputRandomWrites.innerHTML = data.largest.randomWrites.join(' ');
 }
 
-function displayBenchmarkOutputChart(data) {
+function displayBenchmarkOutputChart(data, label) {
     const benchmarkOutputChart = document.querySelector('#benchmark-output-chart');
 
-    const colors = ['#4DC9F6', '#0A88C7', '#0E68C5', '#0D45C1'];
-    const rawData = [data.largest['writes'], data.largest['reads'], data.largest['randomReads'], data.largest['randomWrites']];
-
-    let content = rawData.map(d => d[0]);
+    if (benchmarkChart) benchmarkChart.destroy();
 
     benchmarkChart = new Chart(benchmarkOutputChart, {
         type: 'bar',
         data: {
-            labels: ['Reads', 'Writes', 'Random Reads', 'Random Writes'],
+            labels: [label],
             datasets: [
                 {
-                    label: data.largest['writes'][1],
-                    data: content,
-                    backgroundColor: colors.map(hex => transparentize(hex)),
-                    borderColor: colors,
+                    label: 'Reads',
+                    data: [Number(data.largest['reads'][0])],
+                    backgroundColor: transparentize('#4DC9F6'),
+                    borderColor: '#4DC9F6',
+                },
+                {
+                    label: 'Writes',
+                    data: [Number(data.largest['writes'][0])],
+                    backgroundColor: transparentize('#0A88C7'),
+                    borderColor: '#0A88C7',
+                },
+                {
+                    label: 'Random Reads',
+                    data: [Number(data.largest['randomReads'][0])],
+                    backgroundColor: transparentize('#0E68C5'),
+                    borderColor: '#0E68C5',
+                },
+                {
+                    label: 'Random Writes',
+                    data: [Number(data.largest['randomWrites'][0])],
+                    backgroundColor: transparentize('#0D45C1'),
+                    borderColor: '#0D45C1',
                 },
             ],
         },
@@ -363,10 +476,67 @@ function displayBenchmarkOutputChart(data) {
                     position: 'top',
                 },
                 title: {
-                    display: false,
-                    text: 'Throughput'
+                    display: true,
+                    text: data.largest['writes'][1]
                 }
             }
         },
     });
+}
+
+function displayBenchmarkOutputChartMany(data, labels, type = 'iops') {
+    const benchmarkOutputChart = document.querySelector('#benchmark-output-chart');
+
+    benchmarkChartSwitcher.classList.remove('hidden');
+
+    benchmarkChartData = data;
+
+    let options = {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Reads',
+                    data: data.map(item => Number(splitNumberLetter(item.reads[type], true)[0])),
+                    backgroundColor: transparentize('#4DC9F6'),
+                    borderColor: '#4DC9F6',
+                },
+                {
+                    label: 'Writes',
+                    data: data.map(item => Number(splitNumberLetter(item.writes[type], true)[0])),
+                    backgroundColor: transparentize('#0A88C7'),
+                    borderColor: '#0A88C7',
+                },
+                {
+                    label: 'Random Reads',
+                    data: data.map(item => Number(splitNumberLetter(item.randomReads[type], true)[0])),
+                    backgroundColor: transparentize('#0E68C5'),
+                    borderColor: '#0E68C5',
+                },
+                {
+                    label: 'Random Writes',
+                    data: data.map(item => Number(splitNumberLetter(item.randomWrites[type], true)[0])),
+                    backgroundColor: transparentize('#0D45C1'),
+                    borderColor: '#0D45C1',
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: type === 'iops' ? 'IOPS' : 'Bandwidth (MB/s)',
+                }
+            }
+        },
+    };
+
+    if (benchmarkChart) benchmarkChart.destroy();
+
+    benchmarkChart = new Chart(benchmarkOutputChart, options);
 }

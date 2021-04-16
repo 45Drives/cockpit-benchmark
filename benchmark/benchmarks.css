@@ -20,6 +20,10 @@
     margin-top: 30px;
 }
 
+.benchmarks-container .ml-2 {
+    margin-left: 10px;
+}
+
 .benchmarks-container {
     text-align: left;
     margin-top: 25px;

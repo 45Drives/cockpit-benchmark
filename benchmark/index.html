@@ -46,6 +46,10 @@
                 <input id="benchmark-type-iops" name="benchmark-type" type="radio" value="iops" class="form-check-input">
                 <label>Max IOPS</label>
             </div>
+            <div>
+                <input id="benchmark-type-spectrum" name="benchmark-type" type="radio" value="iops" class="form-check-input">
+                <label>Performance Spectrum</label>
+            </div>
             
             <div>
                 <h4>File Size</h4>
@@ -72,15 +76,14 @@
         <div id="benchmark-output" class="benchmark-output mt-6 text-center hidden">
             <h2>Output</h2>
 
-            <canvas id="benchmark-output-chart"></canvas>
-
-            <div class="hidden">
-                <b>Reads</b> <span id="benchmark-output-reads"></span> <br>
-                <b>Writes</b> <span id="benchmark-output-writes"></span> <br>
-                <br>
-                <b>Random Reads</b> <span id="benchmark-output-random-reads"></span> <br>
-                <b>Random Writes</b> <span id="benchmark-output-random-writes"></span> <br>
+            <div id="benchmark-chart-switcher" class="switcher hidden">
+                <input id="chart-type-iops" name="chart-type" type="radio" value="iops" class="form-check-input" checked>
+                <label>IOPS</label>
+                <input id="chart-type-bandwidth" name="chart-type" type="radio" value="bandwidth" class="form-check-input ml-2">
+                <label>Bandwidth</label>
             </div>
+
+            <canvas id="benchmark-output-chart"></canvas>
         </div>
     </main>
 </body>
