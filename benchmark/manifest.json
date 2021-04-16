@@ -1,0 +1,11 @@
+{
+    "version": 0,
+
+    "menu": {
+        "benchmark": {
+            "label": "Benchmarks",
+            "path": "index.html",
+            "order": 113
+        }
+    }
+}

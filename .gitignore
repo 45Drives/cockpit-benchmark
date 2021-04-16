@@ -1,0 +1,14 @@
+# IDE
+.kdev4/
+*.kdev4
+
+# deb packaging
+debian/cockpit-samba-manager
+debian/cockpit-samba-manager.substvars
+debian/cockpit-samba-manager.postrm.debhelper
+debian/debhelper-build-stamp
+debian/files
+debian/.debhelper
+
+# build ouptut
+dist

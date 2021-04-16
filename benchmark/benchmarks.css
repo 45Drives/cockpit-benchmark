@@ -1,0 +1,46 @@
+.btn,
+.btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.no-padding {
+    padding: 0;
+}
+
+.no-margin {
+    margin: 0;
+}
+
+.benchmarks-container .mt-2 {
+    margin-top: 10px;
+}
+
+.benchmarks-container .mt-6 {
+    margin-top: 30px;
+}
+
+.benchmarks-container {
+    text-align: left;
+    margin-top: 25px;
+}
+
+.benchmarks-container h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.benchmarks-container h4 {
+    font-weight: 600;
+}
+
+.benchmarks-container form {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.benchmark-output {
+    max-width: 500px;
+    margin: 0 auto;
+}

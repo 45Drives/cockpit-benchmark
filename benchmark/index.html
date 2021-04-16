@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Benchmarks</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link href="../base1/cockpit.css" type="text/css" rel="stylesheet">
+	<link href="benchmarks.css" type="text/css" rel="stylesheet">
+	<script src="../base1/cockpit.js"></script>
+	<script src="../manifests.js"></script>
+	<script src="../*/po.js"></script>
+    <script src="chart.min.js"></script>
+    <script src="color.min.js"></script>
+	<script defer src="benchmarks.js"></script>
+</head>
+<body>
+    <main class="benchmarks-container">
+        <h2>Benchmarks</h2>
+
+        <form id="benchmark-form">
+            <div class="no-margin" id="benchmark-alert">
+                <span id="benchmark-alert-icon"></span>
+                <span id="benchmark-alert-text"></span>
+            </div>
+
+            <div class="mt-2">
+                <h4>Benchmark Tool</h4>
+            </div>
+            <div>
+                <input id="benchmark-tool-fio" name="benchmark-tool" type="radio" value="fio" class="form-check-input">
+                <label>FIO <small>(recommended)</small></label>
+            </div>
+            <div>
+                <input id="benchmark-tool-iozone" name="benchmark-tool" type="radio" value="iozone" class="form-check-input">
+                <label>IOzone</label>
+            </div>
+
+            <div class="mt-2">
+                <h4>Benchmark Type</h4>
+            </div>
+            <div>
+                <input id="benchmark-type-throughput" name="benchmark-type" type="radio" value="throughput" class="form-check-input">
+                <label>Max Throughput</label>
+            </div>
+            <div>
+                <input id="benchmark-type-iops" name="benchmark-type" type="radio" value="iops" class="form-check-input">
+                <label>Max IOPS</label>
+            </div>
+            
+            <div>
+                <h4>File Size</h4>
+            </div>
+            <div>
+                <input id="benchmark-size" name="benchmark-size" type="input" value="1G" class="form-control">
+            </div>
+
+            <div>
+                <h4>Test Path</h4>
+            </div>
+            <div>
+                <input id="benchmark-path" name="benchmark-path" type="input" class="form-control">
+            </div>
+
+            <div>
+                <button id="launch-benchmark" class="btn btn-primary mt-2">Launch</button>
+                <div id="benchmark-processing-spinner" class="dialog-wait-ct pull-right mt-2 hidden">
+                    <div class="spinner spinner-md"></div><span></span>
+                </div>
+            </div>
+        </form>
+
+        <div id="benchmark-output" class="benchmark-output mt-6 text-center hidden">
+            <h2>Output</h2>
+
+            <canvas id="benchmark-output-chart"></canvas>
+
+            <div class="hidden">
+                <b>Reads</b> <span id="benchmark-output-reads"></span> <br>
+                <b>Writes</b> <span id="benchmark-output-writes"></span> <br>
+                <br>
+                <b>Random Reads</b> <span id="benchmark-output-random-reads"></span> <br>
+                <b>Random Writes</b> <span id="benchmark-output-random-writes"></span> <br>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
