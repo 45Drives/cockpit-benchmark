@@ -1,11 +1,10 @@
-# IDE
-.kdev4/
-*.kdev4
+# ide
+.vscode
 
-# deb packaging
-debian/cockpit-samba-manager
-debian/cockpit-samba-manager.substvars
-debian/cockpit-samba-manager.postrm.debhelper
+# packaging
+debian/cockpit-benchmark
+debian/cockpit-benchmark.substvars
+debian/cockpit-benchmark.postrm.debhelper
 debian/debhelper-build-stamp
 debian/files
 debian/.debhelper

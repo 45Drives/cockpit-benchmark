@@ -1,0 +1,12 @@
+Source: cockpit-benchmark
+Section: utils
+Priority: optional
+Maintainer: Dawson Della Valle <ddellavalle@45drives.com>
+Build-Depends: debhelper-compat (= 12)
+Standards-Version: 4.4.1
+Homepage: https://github.com/45Drives/cockpit-benchmark
+
+Package: cockpit-benchmark
+Architecture: all
+Depends: cockpit, cockpit-ws, cockpit-bridge
+Description: A Storage Benchmark Utility for Cockpit.

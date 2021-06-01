@@ -1,0 +1,5 @@
+cockpit-benchmark (0.1.0-1focal) focal; urgency=medium
+
+  * Initial packaging of cockpit-benchmark for Ubuntu Focal.
+
+ -- Dawson Della Valle <ddellavalle@45drives.com>  Tue, 1 Jun 2021 9:09:00 -0300
