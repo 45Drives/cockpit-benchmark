@@ -29,6 +29,7 @@ const benchmarkProcessingSpinner = document.querySelector('#benchmark-processing
 
 const benchmarkForm = document.querySelector('#benchmark-form');
 const launchBenchmarkBtn = document.querySelector('#launch-benchmark');
+const downloadBenchmarkBtn = document.querySelector('#download-benchmark');
 
 const benchmarkOutput = document.querySelector('#benchmark-output');
 
@@ -38,6 +39,7 @@ const chartTypeBandwidth = document.querySelector('#chart-type-bandwidth');
 
 let benchmarkChart = null;
 let benchmarkChartData = null;
+let benchmarkData = null;
 
 chartTypeIops.addEventListener('input', event => {
     if (event.target.checked) {
@@ -65,6 +67,8 @@ benchmarkToolIozone.addEventListener('change', event => {
 benchmarkForm.addEventListener('submit', e => e.preventDefault());
 
 launchBenchmarkBtn.addEventListener('click', async () => {
+    resetDownload();
+
     let threadCount = 1;
 
     let toolName = null;
@@ -186,6 +190,22 @@ async function iozoneBenchmark(threadCount, recordSize, fileSize) {
     benchmarkOutput.classList.remove('hidden');
 
     displayBenchmarkOutputChart(output, recordSize);
+
+    enableDownload({
+        data: [
+            {
+                recordSize,
+                writes: output.largest['writes'][0],
+                reads: output.largest['reads'][0],
+                randomReads: output.largest['randomReads'][0],
+                randomWrites: output.largest['randomWrites'][0],
+            },
+        ],
+        tool: 'IOzone',
+        unit: output.largest.reads[1],
+        testType: recordSize === '1M' ? 'Max-Throughput' : 'Max-IOPS',
+        date: new Date(),
+    });
 }
 
 async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) {
@@ -235,8 +255,6 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
         },
     };
 
-    //4k=iops 1M=throughput
-
     output.largest['writes'] = [recordSize === '4k' ? fioOutputs[0].iops : fioOutputs[0].bandwidth, recordSize === '4k' ? 'IOPS' : 'MB/s'];
     output.largest['reads'] = [recordSize === '4k' ? fioOutputs[1].iops : fioOutputs[1].bandwidth, recordSize === '4k' ? 'IOPS' : 'MB/s'];
     output.largest['randomReads'] = [recordSize === '4k' ? fioOutputs[2].iops : fioOutputs[2].bandwidth, recordSize === '4k' ? 'IOPS' : 'MB/s'];
@@ -247,6 +265,22 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
     benchmarkOutput.classList.remove('hidden');
 
     displayBenchmarkOutputChart(output, recordSize);
+
+    enableDownload({
+        data: [
+            {
+                recordSize,
+                writes: output.largest['writes'][0],
+                reads: output.largest['reads'][0],
+                randomReads: output.largest['randomReads'][0],
+                randomWrites: output.largest['randomWrites'][0],
+            },
+        ],
+        tool: 'FIO',
+        unit: output.largest.reads[1],
+        testType: recordSize === '1M' ? 'Max-Throughput' : 'Max-IOPS',
+        date: new Date(),
+    });
 }
 
 async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath) {
@@ -267,7 +301,7 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
 
         fioOutputs[recordSize] = {};
 
-        while (idx < 4) {
+        while (idx < typeLut.length) {
             try {
                 let args = ['fio', '--directory', testPath, '--name', `zfs.fio.${recordSize}.${idx}`, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
         
@@ -290,6 +324,7 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
             randomWrites: null,
         };
 
+        output['recordSize'] = recordSize;
         output['writes'] = fioOutputs[recordSize][0];
         output['reads'] = fioOutputs[recordSize][1];
         output['randomReads'] = fioOutputs[recordSize][2];
@@ -312,6 +347,24 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
     benchmarkOutput.classList.remove('hidden');
 
     displayBenchmarkOutputChartMany(finalOutput, recordSizes);
+
+    const data = finalOutput.map(output => {
+        return {
+            recordSize: output.recordSize,
+            writes: `${output['writes'].iops} / ${output['writes'].bandwidth}`,
+            reads: `${output['reads'].iops} / ${output['reads'].bandwidth}`,
+            randomReads: `${output['randomReads'].iops} / ${output['randomReads'].bandwidth}`,
+            randomWrites: `${output['randomWrites'].iops} / ${output['randomWrites'].bandwidth}`,   
+        };
+    });
+
+    enableDownload({
+        data,
+        tool: 'FIO',
+        unit: 'iops / MB/s',
+        testType: 'Performance Spectrum',
+        date: new Date(),
+    });
 }
 
 function bytesToLargest(x) {
@@ -560,3 +613,36 @@ function displayBenchmarkOutputChartMany(data, labels, type = 'iops') {
 
     benchmarkChart = new Chart(benchmarkOutputChart, options);
 }
+
+function resetDownload() {
+    benchmarkData = null;
+    downloadBenchmarkBtn.setAttribute('disabled', true);
+}
+
+function enableDownload(data) {
+    benchmarkData = data;
+    downloadBenchmarkBtn.removeAttribute('disabled');
+}
+
+function generateSheet(data = { tool: 'fio', unit: 'iops', testType: '?', date: new Date(), reads: 0, writes: 0, randomReads: 0, randomWrites: 0, }) {
+    if (data === null) return;
+
+    const date = data.date ?? new Date();
+
+    const aoa = [
+        ['Tool', data.testType !== null ? 'Test Type' : null, 'Record Size', 'Unit', 'Date', 'Reads', 'Writes', 'Random Reads', 'Random Writes'].filter(x => x !== null),
+        ...data.data.map(x => [data.tool, data.testType ?? null, x.recordSize, data.unit, date.toLocaleString(), x.reads, x.writes, x.randomReads, x.randomWrites].filter(x => x !== null)),
+    ];
+
+    const wb = XLSX.utils.book_new();
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Benchmarks');
+
+    XLSX.writeFile(wb, `benchmark-${data.tool}-${data.testType}-${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}-${date.getTime()}.xlsx`);
+}
+
+downloadBenchmarkBtn.addEventListener('click', () => {
+    generateSheet(benchmarkData);
+});
