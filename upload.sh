@@ -1,4 +1,4 @@
-COCKPIT_HOST="root@192.168.122.24"
+COCKPIT_HOST="root@192.168.123.123"
 
 echo 'Removing old files....'
 ssh $COCKPIT_HOST 'rm -rf /usr/share/cockpit/benchmark'

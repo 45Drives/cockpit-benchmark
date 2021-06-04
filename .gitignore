@@ -11,3 +11,5 @@ debian/.debhelper
 
 # build ouptut
 dist
+
+upload.sh

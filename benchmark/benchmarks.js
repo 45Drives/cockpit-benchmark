@@ -55,12 +55,15 @@ chartTypeBandwidth.addEventListener('input', event => {
 
 benchmarkToolFio.addEventListener('input', () => {
     benchmarkTypeSpectrum.removeAttribute('disabled');
+    benchmarkTypeIops.removeAttribute('disabled');
 });
 
 benchmarkToolIozone.addEventListener('change', event => {
     if (event.target.checked) {
         benchmarkTypeSpectrum.checked = false;
         benchmarkTypeSpectrum.disabled = true;
+        benchmarkTypeIops.checked = false;
+        benchmarkTypeIops.disabled = true;
     }
 });
 
@@ -108,6 +111,13 @@ launchBenchmarkBtn.addEventListener('click', async () => {
 
     if (!testPath) {
         showErrorAlert('You did not provide a test path.');
+        return;
+    }
+
+    let validPath = await isValidDirectory(testPath);
+
+    if (!validPath) {
+        showErrorAlert('You did not provide a valid test path.');
         return;
     }
 
@@ -195,22 +205,33 @@ async function iozoneBenchmark(threadCount, recordSize, fileSize) {
         data: [
             {
                 recordSize,
-                writes: output.largest['writes'][0],
-                reads: output.largest['reads'][0],
-                randomReads: output.largest['randomReads'][0],
-                randomWrites: output.largest['randomWrites'][0],
+                date: new Date(),
+                bwUnit: recordSize === '1M' ? output.largest['writes'][1] : null,
+                bandwidth: recordSize === '1M' ? [
+                    output.largest['writes'][0],
+                    output.largest['reads'][0],
+                    output.largest['randomReads'][0],
+                    output.largest['randomWrites'][0],
+                ] : null,
+                iops: recordSize === '4k' ? [
+                    output.largest['writes'][0],
+                    output.largest['reads'][0],
+                    output.largest['randomReads'][0],
+                    output.largest['randomWrites'][0],
+                ] : null,
             },
         ],
         tool: 'IOzone',
-        unit: output.largest.reads[1],
-        testType: recordSize === '1M' ? 'Max-Throughput' : 'Max-IOPS',
         date: new Date(),
+        testType: recordSize === '1M' ? 'Max-Throughput' : 'Max-IOPS',
     });
 }
 
 async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) {
-    const runtime = 5;
+    const runtime = 2;
     const typeLut = ['write', 'read', 'randread', 'randwrite'];
+
+    let fioFiles = [];
 
     let fioOutputs = [];
     let escapedError = false;
@@ -219,7 +240,11 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
 
     while (idx < 4) {
         try {
-            let args = ['fio', '--directory', testPath, '--name', `zfs.fio.${idx}`, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
+            let fileName = `fio.${idx}`;
+
+            fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.0.0`);
+
+            let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
     
             let data = await cockpit.spawn(args, { err: 'out', superuser: 'require' });
             
@@ -233,6 +258,8 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
         idx += 1;
     }
     
+    await deleteFiles(fioFiles);
+
     benchmarkProcessingSpinner.classList.add('hidden');
 
     if (escapedError) {
@@ -270,22 +297,33 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
         data: [
             {
                 recordSize,
-                writes: output.largest['writes'][0],
-                reads: output.largest['reads'][0],
-                randomReads: output.largest['randomReads'][0],
-                randomWrites: output.largest['randomWrites'][0],
+                date: new Date(),
+                bwUnit: recordSize === '1M' ? 'MB/s' : null,
+                bandwidth: recordSize === '1M' ? [
+                    fioOutputs[0].bandwidth,
+                    fioOutputs[1].bandwidth,
+                    fioOutputs[2].bandwidth,
+                    fioOutputs[3].bandwidth,
+                ] : null,
+                iops: recordSize === '4k' ? [
+                    fioOutputs[0].iops,
+                    fioOutputs[1].iops,
+                    fioOutputs[2].iops,
+                    fioOutputs[3].iops,
+                ] : null,
             },
         ],
         tool: 'FIO',
-        unit: output.largest.reads[1],
-        testType: recordSize === '1M' ? 'Max-Throughput' : 'Max-IOPS',
         date: new Date(),
+        testType: recordSize === '1M' ? 'Max-Throughput' : 'Max-IOPS',
     });
 }
 
 async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath) {
     const runtime = 2;
     const typeLut = ['write', 'read', 'randread', 'randwrite'];
+
+    let fioFiles = [];
 
     let fioOutputs = {};
     let finalOutput = [];
@@ -303,7 +341,11 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
 
         while (idx < typeLut.length) {
             try {
-                let args = ['fio', '--directory', testPath, '--name', `zfs.fio.${recordSize}.${idx}`, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
+                let fileName = `fio.${recordSize}.${idx}`;
+
+                fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.0.0`);
+
+                let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
         
                 let data = await cockpit.spawn(args, { err: 'out', superuser: 'require' });
                 
@@ -317,23 +359,31 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
             idx += 1;
         }
 
-        let output = {
-            writes: null,
-            reads: null,
-            randomReads: null,
-            randomWrites: null,
-        };
+        let output = {};
 
+        output['date'] = new Date();
         output['recordSize'] = recordSize;
-        output['writes'] = fioOutputs[recordSize][0];
-        output['reads'] = fioOutputs[recordSize][1];
-        output['randomReads'] = fioOutputs[recordSize][2];
-        output['randomWrites'] = fioOutputs[recordSize][3];
+        output['bwUnit'] = 'MB/s';
+        output['bandwidth'] = [
+            fioOutputs[recordSize][0].bandwidth,
+            fioOutputs[recordSize][1].bandwidth,
+            fioOutputs[recordSize][2].bandwidth,
+            fioOutputs[recordSize][3].bandwidth,
+        ];
+
+        output['iops'] = [
+            fioOutputs[recordSize][0].iops,
+            fioOutputs[recordSize][1].iops,
+            fioOutputs[recordSize][2].iops,
+            fioOutputs[recordSize][3].iops,
+        ];
 
         finalOutput.push(output);
 
         sizeIndex += 1;
     }
+
+    await deleteFiles(fioFiles);
     
     benchmarkProcessingSpinner.classList.add('hidden');
 
@@ -348,22 +398,10 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
 
     displayBenchmarkOutputChartMany(finalOutput, recordSizes);
 
-    const data = finalOutput.map(output => {
-        return {
-            recordSize: output.recordSize,
-            writes: `${output['writes'].iops} / ${output['writes'].bandwidth}`,
-            reads: `${output['reads'].iops} / ${output['reads'].bandwidth}`,
-            randomReads: `${output['randomReads'].iops} / ${output['randomReads'].bandwidth}`,
-            randomWrites: `${output['randomWrites'].iops} / ${output['randomWrites'].bandwidth}`,   
-        };
-    });
-
     enableDownload({
-        data,
+        data: finalOutput,
         tool: 'FIO',
-        unit: 'iops / MB/s',
-        testType: 'Performance Spectrum',
-        date: new Date(),
+        testType: 'Performance-Spectrum',
     });
 }
 
@@ -571,25 +609,25 @@ function displayBenchmarkOutputChartMany(data, labels, type = 'iops') {
             datasets: [
                 {
                     label: 'Reads',
-                    data: data.map(item => Number(splitNumberLetter(item.reads[type], true)[0])),
+                    data: data.map(item => Number(splitNumberLetter(item[type][0], true)[0])),
                     backgroundColor: transparentize('#4DC9F6'),
                     borderColor: '#4DC9F6',
                 },
                 {
                     label: 'Writes',
-                    data: data.map(item => Number(splitNumberLetter(item.writes[type], true)[0])),
+                    data: data.map(item => Number(splitNumberLetter(item[type][1], true)[0])),
                     backgroundColor: transparentize('#0A88C7'),
                     borderColor: '#0A88C7',
                 },
                 {
                     label: 'Random Reads',
-                    data: data.map(item => Number(splitNumberLetter(item.randomReads[type], true)[0])),
+                    data: data.map(item => Number(splitNumberLetter(item[type][2], true)[0])),
                     backgroundColor: transparentize('#0E68C5'),
                     borderColor: '#0E68C5',
                 },
                 {
                     label: 'Random Writes',
-                    data: data.map(item => Number(splitNumberLetter(item.randomWrites[type], true)[0])),
+                    data: data.map(item => Number(splitNumberLetter(item[type][3], true)[0])),
                     backgroundColor: transparentize('#0D45C1'),
                     borderColor: '#0D45C1',
                 },
@@ -614,6 +652,32 @@ function displayBenchmarkOutputChartMany(data, labels, type = 'iops') {
     benchmarkChart = new Chart(benchmarkOutputChart, options);
 }
 
+async function deleteFiles(files = []) {
+    try {
+        await cockpit.spawn(['rm', '-f', ...files], { err: 'out', superuser: 'require' });
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+async function isValidDirectory(path) {
+    try {
+        const res = await cockpit.spawn(['/usr/share/cockpit/benchmark/scripts/exists.py', path], { err: 'out', superuser: 'require' });
+
+        const result = res.trim();
+
+        return result === 'y';
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+function getSheetFormat() {
+    const formats = [...document.querySelectorAll('[name="download-format"]')];
+    return formats.find(el => el.checked)?.value;
+}
+
 function resetDownload() {
     benchmarkData = null;
     downloadBenchmarkBtn.setAttribute('disabled', true);
@@ -624,14 +688,34 @@ function enableDownload(data) {
     downloadBenchmarkBtn.removeAttribute('disabled');
 }
 
-function generateSheet(data = { tool: 'fio', unit: 'iops', testType: '?', date: new Date(), reads: 0, writes: 0, randomReads: 0, randomWrites: 0, }) {
+function generateSheet(data) {
     if (data === null) return;
 
     const date = data.date ?? new Date();
 
     const aoa = [
-        ['Tool', data.testType !== null ? 'Test Type' : null, 'Record Size', 'Unit', 'Date', 'Reads', 'Writes', 'Random Reads', 'Random Writes'].filter(x => x !== null),
-        ...data.data.map(x => [data.tool, data.testType ?? null, x.recordSize, data.unit, date.toLocaleString(), x.reads, x.writes, x.randomReads, x.randomWrites].filter(x => x !== null)),
+        [
+            'Tool', 
+            data.testType !== null ? 'Test Type' : null,
+            'Record Size', 
+            'Date',
+            ...(data.data[0].bandwidth ? [`Reads (${data.data[0].bwUnit})`, `Writes (${data.data[0].bwUnit})`, `Random Reads (${data.data[0].bwUnit})`, `Random Writes (${data.data[0].bwUnit})`] : []),
+            ...(data.data[0].iops ? [`Reads (IOPS)`, `Writes (IOPS)`, `Random Reads (IOPS)`, `Random Writes (IOPS)`] : []),
+        ].filter(x => x !== null),
+        ...data.data.map(x => [
+            data.tool,
+            data.testType ?? null,
+            x.recordSize,
+            x.date.toLocaleString(),
+            x.bandwidth?.[0],
+            x.bandwidth?.[1],
+            x.bandwidth?.[2],
+            x.bandwidth?.[3],
+            x.iops?.[0],
+            x.iops?.[1],
+            x.iops?.[2],
+            x.iops?.[3],
+        ].filter(x => (x ?? null) !== null)),
     ];
 
     const wb = XLSX.utils.book_new();
@@ -640,7 +724,7 @@ function generateSheet(data = { tool: 'fio', unit: 'iops', testType: '?', date: 
 
     XLSX.utils.book_append_sheet(wb, ws, 'Benchmarks');
 
-    XLSX.writeFile(wb, `benchmark-${data.tool}-${data.testType}-${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}-${date.getTime()}.xlsx`);
+    XLSX.writeFile(wb, `benchmark-${data.tool}-${data.testType}-${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}-${date.getTime()}.${getSheetFormat()}`);
 }
 
 downloadBenchmarkBtn.addEventListener('click', () => {

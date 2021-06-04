@@ -1,4 +1,6 @@
-/*
+#!/usr/bin/env python3
+
+"""
     Cockpit Benchmarks - A Storage Benchmark Utility for Cockpit.
     Copyright (C) 2021 Dawson Della Valle <ddellavalle@45drives.com>
 
@@ -16,61 +18,28 @@
 
     You should have received a copy of the GNU General Public License
     along with Cockpit Benchmarks.  If not, see <https://www.gnu.org/licenses/>.
-*/
+"""
 
-.btn,
-.btn:focus {
-    outline: none;
-    box-shadow: none;
-}
+from os import path
+from optparse import OptionParser
 
-.no-padding {
-    padding: 0;
-}
+import sys
 
-.no-margin {
-    margin: 0;
-}
+def main():
+    parser = OptionParser()
+    (options, args) = parser.parse_args()
+    if len(args) < 1:
+        print("Not enough arguments!\nexists <path>")
+        sys.exit(1)
+    
+    exists = path.exists(args[0])
+    isdir = path.isdir(args[0])
 
-.benchmarks-container .mt-2 {
-    margin-top: 10px;
-}
+    if exists and isdir:
+        print('y')
+    else:
+        print('n')
 
-.benchmarks-container .mt-6 {
-    margin-top: 30px;
-}
-
-.benchmarks-container .ml-2 {
-    margin-left: 10px;
-}
-
-.benchmarks-container {
-    text-align: left;
-    margin-top: 25px;
-}
-
-.benchmarks-container h2 {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.benchmarks-container h4 {
-    font-weight: 600;
-}
-
-.benchmarks-container form {
-    max-width: 500px;
-    margin: 0 auto;
-    text-align: left;
-}
-
-.benchmark-output {
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.benchmark-tooltip,
-.benchmark-tooltip:hover,
-.benchmark-tooltip:active {
-    outline: none;
-}
+if __name__ == "__main__":
+    main()
+    sys.exit(0)
