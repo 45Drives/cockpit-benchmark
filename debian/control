@@ -8,5 +8,5 @@ Homepage: https://github.com/45Drives/cockpit-benchmark
 
 Package: cockpit-benchmark
 Architecture: all
-Depends: cockpit, cockpit-ws, cockpit-bridge, fio, iozone3
+Depends: cockpit, cockpit-ws, cockpit-bridge, fio, iozone3, python3
 Description: A Storage Benchmark Utility for Cockpit.
