@@ -24,6 +24,14 @@
     box-shadow: none;
 }
 
+.margintop-4 {
+    margin-top: 8px;
+}
+
+.paddingright-4 {
+    padding-right: 8px;
+}
+
 .no-padding {
     padding: 0;
 }
@@ -73,4 +81,12 @@
 .benchmark-tooltip:hover,
 .benchmark-tooltip:active {
     outline: none;
+}
+
+#benchmark-progress {
+    transition: all 3s;
+}
+
+.progress-label-left .progress-bar span {
+    font-size: 15px !important;
 }

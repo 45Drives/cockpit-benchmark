@@ -48,10 +48,10 @@
                 <h4>Benchmark Tool</h4>
             </div>
             <div>
-                <input id="benchmark-tool-fio" name="benchmark-tool" type="radio" value="fio" class="form-check-input">
-                <label>FIO <small>(recommended)</small></label>
+                <input id="benchmark-tool-fio" name="benchmark-tool" type="radio" value="fio" class="form-check-input" checked>
+                <label>FIO</label>
             </div>
-            <div>
+            <div class="hidden">
                 <input id="benchmark-tool-iozone" name="benchmark-tool" type="radio" value="iozone" class="form-check-input">
                 <label>IOzone</label>
             </div>
@@ -76,14 +76,37 @@
                 <h4>File Size</h4>
             </div>
             <div>
-                <input id="benchmark-size" name="benchmark-size" type="input" value="1G" class="form-control">
+                <input id="benchmark-size" name="benchmark-size" type="text" value="1G" class="form-control">
+            </div>
+
+            <div class="mt-2">
+                <h4>IO Depth</h4>
+            </div>
+            <div>
+                <select id="benchmark-iodepth" class="form-control">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="8">8</option>
+                    <option value="16" selected>16</option>
+                    <option value="32">32</option>
+                    <option value="64">64</option>
+                    <option value="128">128</option>
+                </select>
+            </div>
+
+            <div class="mt-2">
+                <h4>Runtime</h4>
+            </div>
+            <div>
+                <input id="benchmark-runtime" name="benchmark-runtime" type="number" class="form-control" value="2" placeholder="Seconds">
             </div>
 
             <div class="mt-2">
                 <h4>Test Path</h4>
             </div>
             <div>
-                <input id="benchmark-path" name="benchmark-path" type="input" class="form-control">
+                <input id="benchmark-path" name="benchmark-path" type="text" class="form-control" placeholder="/mnt/hdd">
             </div>
 
             <div>
@@ -91,6 +114,15 @@
                 <button id="download-benchmark" class="btn btn-primary mt-2" disabled>Download Report</button>
                 <div id="benchmark-processing-spinner" class="dialog-wait-ct pull-right mt-2 hidden">
                     <div class="spinner spinner-md"></div><span></span>
+                </div>
+            </div>
+
+            <div id="benchmark-progress" class="progress-container progress-description-left margintop-4 hidden">
+                <div class="progress-description"></div>
+                <div class="progress progress-striped active">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0;">
+                        <span class="sr-only"></span>
+                    </div>
                 </div>
             </div>
         </form>

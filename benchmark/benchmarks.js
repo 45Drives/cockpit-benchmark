@@ -25,6 +25,7 @@ const benchmarkTypeIops = document.querySelector('#benchmark-type-iops');
 const benchmarkTypeSpectrum = document.querySelector('#benchmark-type-spectrum');
 const benchmarkSize = document.querySelector('#benchmark-size');
 const benchmarkPath = document.querySelector('#benchmark-path');
+const benchmarkProgress = document.querySelector('#benchmark-progress');
 const benchmarkProcessingSpinner = document.querySelector('#benchmark-processing-spinner');
 
 const benchmarkForm = document.querySelector('#benchmark-form');
@@ -107,6 +108,10 @@ launchBenchmarkBtn.addEventListener('click', async () => {
         return;
     }
 
+    let ioDepth = [...document.querySelectorAll('#benchmark-iodepth > option')].find(x => x.selected).value;
+
+    let runtime = document.querySelector('#benchmark-runtime').value;
+
     let testPath = benchmarkPath.value;
 
     if (!testPath) {
@@ -128,16 +133,32 @@ launchBenchmarkBtn.addEventListener('click', async () => {
         benchmarkChartSwitcher.classList.add('hidden');
     }
 
+    showProgressBar();
+
     if (toolName === 'iozone') {
         iozoneBenchmark(threadCount, recordSize, fileSize);
     }
 
     if (toolName === 'fio' && !benchmarkTypeSpectrum.checked) {
-        genericFIOBenchmark(threadCount, recordSize, fileSize, testPath);
+        genericFIOBenchmark({
+            threadCount,
+            recordSize,
+            fileSize,
+            testPath,
+            ioDepth,
+            runtime,
+        });
     }
 
     if (toolName === 'fio' && benchmarkTypeSpectrum.checked) {
-        spectrumFIOBenchmark(threadCount, ['4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M'], fileSize, testPath);
+        spectrumFIOBenchmark({
+            threadCount,
+            recordSizes: ['4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M'],
+            fileSize,
+            testPath,
+            ioDepth,
+            runtime,
+        });
     }
 });
 
@@ -227,8 +248,16 @@ async function iozoneBenchmark(threadCount, recordSize, fileSize) {
     });
 }
 
-async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) {
-    const runtime = 2;
+async function genericFIOBenchmark(options) {
+    const {
+        threadCount,
+        recordSize,
+        fileSize,
+        testPath,
+        ioDepth,
+        runtime,
+    } = options;
+
     const typeLut = ['write', 'read', 'randread', 'randwrite'];
 
     let fioFiles = [];
@@ -236,19 +265,23 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
     let fioOutputs = [];
     let escapedError = false;
 
+    updateProgressBar(0, `0/${typeLut.length}`);
+
     let idx = 0;
 
-    while (idx < 4) {
+    while (idx < typeLut.length) {
         try {
             let fileName = `fio.${idx}`;
 
             fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.0.0`);
 
-            let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
+            let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
     
             let data = await cockpit.spawn(args, { err: 'out', superuser: 'require' });
             
             fioOutputs[idx] = parseFioOutput(data, typeLut[idx].includes('read') ? 'read' : 'write');
+
+            updateProgressBar(((idx + 1) / typeLut.length) * 100, `${idx + 1}/${typeLut.length}`);
         } catch (error) {
             console.log(error);
             escapedError = true;
@@ -319,8 +352,16 @@ async function genericFIOBenchmark(threadCount, recordSize, fileSize, testPath) 
     });
 }
 
-async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath) {
-    const runtime = 2;
+async function spectrumFIOBenchmark(options) {
+    const {
+        threadCount,
+        recordSizes,
+        fileSize,
+        testPath,
+        ioDepth,
+        runtime,
+    } = options;
+
     const typeLut = ['write', 'read', 'randread', 'randwrite'];
 
     let fioFiles = [];
@@ -329,6 +370,8 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
     let finalOutput = [];
 
     let escapedError = false;
+
+    updateProgressBar(0, `0/${recordSizes.length * typeLut.length}`);
 
     let sizeIndex = 0;
 
@@ -345,17 +388,19 @@ async function spectrumFIOBenchmark(threadCount, recordSizes, fileSize, testPath
 
                 fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.0.0`);
 
-                let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--runtime', runtime, '--group_reporting'].filter(x => x !== null);
+                let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
         
                 let data = await cockpit.spawn(args, { err: 'out', superuser: 'require' });
                 
                 fioOutputs[recordSize][idx] = parseFioOutput(data, typeLut[idx].includes('read') ? 'read' : 'write');
+
+                updateProgressBar((((sizeIndex * 4) + (idx + 1)) / (recordSizes.length * typeLut.length)) * 100, `${(sizeIndex * 4) + (idx + 1)}/${recordSizes.length * typeLut.length}`);
             } catch (error) {
                 console.log(error);
                 escapedError = true;
                 break;
             }
-    
+
             idx += 1;
         }
 
@@ -542,6 +587,24 @@ function displayBenchmarkOutput(data) {
     benchmarkOutputWrites.innerHTML = data.largest.writes.join(' ');
     benchmarkOutputRandomReads.innerHTML = data.largest.randomReads.join(' ');
     benchmarkOutputRandomWrites.innerHTML = data.largest.randomWrites.join(' ');
+}
+
+function updateProgressBar(percent, desc) {
+    const progressBar = benchmarkProgress.querySelector(':scope [role="progressbar"]');
+    const progressText = benchmarkProgress.querySelector(':scope .progress-description');
+    const progressReader = benchmarkProgress.querySelector(':scope .sr-only');
+
+    progressBar.setAttribute('aria-valuenow', percent);
+    progressBar.style.width = `${percent}%`;
+
+    progressText.innerHTML = desc;
+    progressReader.innerHTML = `${percent}% Complete`;
+}
+
+function showProgressBar() {
+    benchmarkProgress.classList.remove('hidden');
+
+    updateProgressBar(0, '0/0');
 }
 
 function displayBenchmarkOutputChart(data, label) {
