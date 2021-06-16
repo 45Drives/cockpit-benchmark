@@ -564,7 +564,22 @@ function parseFioOutput(data, bmType) {
 
     let rawBandwidth = splitNumberLetter(line.match(/BW=([^)]+)\s/)[1], true);
 
-    let bandwidth = (Number(rawBandwidth[0]) * 1.049).toFixed(2);
+    let bandwidth;
+
+    switch (rawBandwidth[1]) {
+        case 'KiB/s':
+            bandwidth = ((Number(rawBandwidth[0]) * 1.049) / 1024).toFixed(2);
+            break;
+        case 'MiB/s':
+            bandwidth = (Number(rawBandwidth[0]) * 1.049).toFixed(2);
+            break;
+        case 'GiB/s':
+            bandwidth = ((Number(rawBandwidth[0]) * 1.049) * 1024).toFixed(2);
+            break;
+        default:
+            bandwidth = 0;
+            break;
+    }
 
     return {
         iops,
