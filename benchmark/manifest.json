@@ -1,7 +1,7 @@
 {
     "version": 0,
 
-    "menu": {
+    "tools": {
         "benchmark": {
             "label": "Benchmarks",
             "path": "index.html",
