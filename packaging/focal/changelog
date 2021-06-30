@@ -1,0 +1,8 @@
+cockpit-benchmark (0.1.0-1focal) focal; urgency=medium
+
+  * Implement fio support
+  * Generate bar graphs for data from tools.
+  * Add export functionality for CSV, XLSX, and ODS.
+  * Add the auto packaging utility.
+
+ -- Dawson Della Valle <ddellavalle@45drives.com>  Wed, 30 Jun 2021 07:32:50 -0300
