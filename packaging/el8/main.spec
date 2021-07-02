@@ -26,6 +26,10 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Fri Jul 02 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.1.0-2
+- Build el7 packages
+* Fri Jul 02 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.1.0-2
+- Build el7 packages
 * Wed Jun 30 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.1.0-1
 - Implement fio support
 - Generate bar graphs for data from tools.
