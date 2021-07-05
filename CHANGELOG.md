@@ -1,4 +1,4 @@
-# Cockpit Benchmark 0.1.0-1
+## Cockpit Benchmark 0.1.0-1
 
 * Implement fio support.
 * Generate bar graphs for data from tools.
