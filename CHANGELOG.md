@@ -1,5 +1,3 @@
-## Cockpit Benchmark 0.2.0-1
+## Cockpit Benchmark 0.2.1-1
 
-* Move to multi-file process.
-* Fix delete file issue with fio.
-* Officially remove iozone support.
+* Make content more consistent and clean up page.

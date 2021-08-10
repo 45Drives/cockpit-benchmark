@@ -26,6 +26,8 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Tue Aug 10 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.2.1-1
+- Make content more consistent and clean up page.
 * Tue Aug 10 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.2.0-1
 - Move to multi-file process.
 - Fix delete file issue with fio.

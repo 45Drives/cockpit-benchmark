@@ -1,3 +1,9 @@
+cockpit-benchmark (0.2.1-1focal) focal; urgency=medium
+
+  * Make content more consistent and clean up page.
+
+ -- Dawson Della Valle <ddellavalle@45drives.com>  Tue, 10 Aug 2021 07:53:09 -0300
+
 cockpit-benchmark (0.2.0-1focal) focal; urgency=medium
 
   * Move to multi-file process.

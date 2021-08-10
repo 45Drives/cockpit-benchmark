@@ -3,7 +3,7 @@
     "name": "cockpit-benchmark",
     "title": "Cockpit Benchmark",
     "prerelease": false,
-    "version": "0.2.0",
+    "version": "0.2.1",
     "buildVersion": "1",
     "author": "Dawson Della Valle <ddellavalle@45drives.com>",
     "url": "https://github.com/45Drives/cockpit-benchmark",
@@ -52,7 +52,7 @@
     ],
     "changelog": {
         "urgency": "medium",
-        "version": "0.2.0",
+        "version": "0.2.1",
         "buildVersion": "1",
         "ignore": [],
         "date": null,
