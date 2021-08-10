@@ -100,7 +100,7 @@ export function transparentize(hex) {
 export async function deleteFiles(files = []) {
     try {
         const argv = ['sh', '-c', `rm -f ${files.join(' ')}`];
-        const res = await runCommand(argv);
+        await runCommand(argv);
     } catch (error) {
         console.error(error);
     }

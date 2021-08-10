@@ -37,8 +37,6 @@ export class FIOManager {
             try {
                 let fileName = `fio.${idx}`;
     
-                await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
-    
                 let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
         
                 let data = await runCommand(args);
@@ -46,6 +44,8 @@ export class FIOManager {
                 fioOutputs[idx] = this.parse(data, typeLut[idx].includes('read') ? 'read' : 'write');
     
                 ProgressBar.update(((idx + 1) / typeLut.length) * 100, `${idx + 1}/${typeLut.length}`);
+
+                await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
             } catch (error) {
                 console.error(error);
                 escapedError = true;
@@ -137,9 +137,7 @@ export class FIOManager {
             while (idx < typeLut.length) {
                 try {
                     let fileName = `fio.${recordSize}.${idx}`;
-    
-                    await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
-    
+        
                     let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
             
                     let data = await runCommand(args);
@@ -147,6 +145,8 @@ export class FIOManager {
                     fioOutputs[recordSize][idx] = this.parse(data, typeLut[idx].includes('read') ? 'read' : 'write');
     
                     ProgressBar.update((((sizeIndex * 4) + (idx + 1)) / (recordSizes.length * typeLut.length)) * 100, `${(sizeIndex * 4) + (idx + 1)}/${recordSizes.length * typeLut.length}`);
+
+                    await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
                 } catch (error) {
                     console.error(error);
                     escapedError = true;

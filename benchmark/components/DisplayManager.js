@@ -1,5 +1,5 @@
 import { benchmarkChartSwitcher, benchmarkOutput } from './elements.js';
-import { transparentize } from './functions.js';
+import { splitNumberLetter, transparentize } from './functions.js';
 
 export class DisplayManager {
     constructor() {
