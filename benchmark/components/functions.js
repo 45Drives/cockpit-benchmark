@@ -1,5 +1,5 @@
-import { benchmarkPath, benchmarkRuntime, benchmarkToolFio, benchmarkTypeIops, benchmarkTypeSpectrum, benchmarkTypeThroughput } from "./elements";
-import { ProgressBar } from "./ProgressBar";
+import { benchmarkPath, benchmarkRuntime, benchmarkSize, benchmarkToolFio, benchmarkTypeIops, benchmarkTypeSpectrum, benchmarkTypeThroughput } from './elements.js';
+import { ProgressBar } from './ProgressBar.js';
 
 export async function runCommand(argv) {
     return new Promise((resolve, reject) => {
@@ -12,7 +12,8 @@ export async function runCommand(argv) {
             resolve(data);
         });
         
-        proc.fail((err, data) => {
+        proc.fail((error, data) => {
+            console.error(error);
             reject(data);
         });
     })
@@ -72,8 +73,8 @@ export function showSuccessAlert(message) {
 
     clearAlert();
 
-    alert.classList.add("alert", "alert-success");
-    alertIcon.classList.add("pficon", "pficon-ok");
+    alert.classList.add('alert', 'alert-success');
+    alertIcon.classList.add('pficon', 'pficon-ok');
     alertText.innerHTML = message;
 
     setTimeout(() => clearAlert(), 3200);
@@ -84,8 +85,8 @@ export function showErrorAlert(message) {
 
     clearAlert();
 
-    alert.classList.add("alert", "alert-danger");
-    alertIcon.classList.add("pficon", "pficon-error-circle-o");
+    alert.classList.add('alert', 'alert-danger');
+    alertIcon.classList.add('pficon', 'pficon-error-circle-o');
     alertText.innerHTML = message;
 
     setTimeout(() => clearAlert(), 3200);
@@ -98,9 +99,10 @@ export function transparentize(hex) {
 
 export async function deleteFiles(files = []) {
     try {
-        await cockpit.spawn(['rm', '-f', ...files], { err: 'out', superuser: 'require' });
+        const argv = ['sh', '-c', `rm -f ${files.join(' ')}`];
+        const res = await runCommand(argv);
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 
@@ -112,7 +114,7 @@ export async function isValidDirectory(path) {
 
         return result === 'y';
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return false;
     }
 }
