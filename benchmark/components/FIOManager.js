@@ -25,9 +25,7 @@ export class FIOManager {
         } = options;
     
         const typeLut = ['write', 'read', 'randread', 'randwrite'];
-    
-        let fioFiles = [];
-    
+        
         let fioOutputs = [];
         let escapedError = false;
     
@@ -39,7 +37,7 @@ export class FIOManager {
             try {
                 let fileName = `fio.${idx}`;
     
-                fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`);
+                await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
     
                 let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
         
@@ -56,9 +54,7 @@ export class FIOManager {
     
             idx += 1;
         }
-        
-        await deleteFiles(fioFiles);
-    
+            
         ProgressBar.stop();
     
         if (escapedError) {
@@ -122,8 +118,6 @@ export class FIOManager {
     
         const typeLut = ['write', 'read', 'randread', 'randwrite'];
     
-        let fioFiles = [];
-    
         let fioOutputs = {};
         let finalOutput = [];
     
@@ -137,14 +131,14 @@ export class FIOManager {
             let idx = 0;
     
             let recordSize = recordSizes[sizeIndex];
-    
+
             fioOutputs[recordSize] = {};
     
             while (idx < typeLut.length) {
                 try {
                     let fileName = `fio.${recordSize}.${idx}`;
     
-                    fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`);
+                    await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
     
                     let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
             
@@ -189,8 +183,6 @@ export class FIOManager {
     
             sizeIndex += 1;
         }
-    
-        await deleteFiles(fioFiles);
         
         ProgressBar.stop();
     
