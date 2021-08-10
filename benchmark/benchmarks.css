@@ -54,11 +54,15 @@
 
 .benchmarks-container {
     text-align: left;
-    margin-top: 25px;
+    width: 95%;
+    max-width: 500px;
+    margin-bottom: 25px;
 }
 
-.benchmarks-container h2 {
-    margin-bottom: 20px;
+.benchmarks-container h1 {
+    padding-bottom: 25px;
+    padding-top: 20px;
+    font-size: 30px;
     text-align: center;
 }
 
@@ -89,4 +93,11 @@
 
 .progress-label-left .progress-bar span {
     font-size: 15px !important;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
 }
