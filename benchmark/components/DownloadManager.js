@@ -1,9 +1,12 @@
+import { downloadBenchmarkBtn } from './elements.js';
+import { SheetManager } from './SheetManager.js';
+
 export class DownloadManager {
     constructor() {
         this.data = null;
     }
 
-    setupButton() {
+    initialize() {
         downloadBenchmarkBtn.addEventListener('click', () => {
             SheetManager.generate(this.data);
         });

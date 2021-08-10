@@ -18,15 +18,17 @@
     along with Cockpit Benchmarks.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { benchmarkForm, chartTypeBandwidth, chartTypeIops, launchBenchmarkBtn } from "./components/elements.js";
-import { launchBenchmark } from "./components/functions.js";
-import { FIOManager } from "./components/FIOManager.js";
-import { DownloadManager } from "./components/DownloadManager.js";
-import { DisplayManager } from "./components/DisplayManager.js";
+import { benchmarkForm, chartTypeBandwidth, chartTypeIops, launchBenchmarkBtn } from './components/elements.js';
+import { launchBenchmark } from './components/functions.js';
+import { FIOManager } from './components/FIOManager.js';
+import { DownloadManager } from './components/DownloadManager.js';
+import { DisplayManager } from './components/DisplayManager.js';
 
 const downloadManager = new DownloadManager();
 const displayManager = new DisplayManager();
 const fioManager = new FIOManager(downloadManager, displayManager);
+
+downloadManager.initialize();
 
 chartTypeIops.addEventListener('input', event => {
     if (event.target.checked) {

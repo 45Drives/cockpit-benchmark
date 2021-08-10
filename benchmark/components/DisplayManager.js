@@ -1,4 +1,5 @@
-import { benchmarkChartSwitcher, benchmarkOutput } from "./elements.js";
+import { benchmarkChartSwitcher, benchmarkOutput } from './elements.js';
+import { transparentize } from './functions.js';
 
 export class DisplayManager {
     constructor() {
@@ -75,7 +76,7 @@ export class DisplayManager {
 
         this.resetChart();
     
-        benchmarkChart = new Chart(benchmarkOutputChart, options);
+        this.chart = new Chart(benchmarkOutputChart, options);
     }
     
     outputChartMany(data, labels, type = 'iops') {

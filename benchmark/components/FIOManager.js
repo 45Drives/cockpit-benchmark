@@ -1,7 +1,7 @@
-import { DisplayManager } from "./DisplayManager.js";
-import { DownloadManager } from "./DownloadManager.js";
-import { deleteFiles, runCommand, showErrorAlert, showSuccessAlert, splitNumberLetter } from "./functions.js";
-import { ProgressBar } from "./ProgressBar.js";
+import { DisplayManager } from './DisplayManager.js';
+import { DownloadManager } from './DownloadManager.js';
+import { deleteFiles, runCommand, showErrorAlert, showSuccessAlert, splitNumberLetter } from './functions.js';
+import { ProgressBar } from './ProgressBar.js';
 
 export class FIOManager {
     /**
@@ -39,7 +39,7 @@ export class FIOManager {
             try {
                 let fileName = `fio.${idx}`;
     
-                fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.0.0`);
+                fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`);
     
                 let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
         
@@ -144,7 +144,7 @@ export class FIOManager {
                 try {
                     let fileName = `fio.${recordSize}.${idx}`;
     
-                    fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.0.0`);
+                    fioFiles.push(`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`);
     
                     let args = ['fio', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting'].filter(x => x !== null);
             
@@ -154,7 +154,7 @@ export class FIOManager {
     
                     ProgressBar.update((((sizeIndex * 4) + (idx + 1)) / (recordSizes.length * typeLut.length)) * 100, `${(sizeIndex * 4) + (idx + 1)}/${recordSizes.length * typeLut.length}`);
                 } catch (error) {
-                    console.log(error);
+                    console.error(error);
                     escapedError = true;
                     break;
                 }
@@ -168,18 +168,22 @@ export class FIOManager {
             output['recordSize'] = recordSize;
             output['bwUnit'] = 'MB/s';
             output['bandwidth'] = [
-                fioOutputs[recordSize][0].bandwidth,
-                fioOutputs[recordSize][1].bandwidth,
-                fioOutputs[recordSize][2].bandwidth,
-                fioOutputs[recordSize][3].bandwidth,
+                fioOutputs[recordSize][0]?.bandwidth,
+                fioOutputs[recordSize][1]?.bandwidth,
+                fioOutputs[recordSize][2]?.bandwidth,
+                fioOutputs[recordSize][3]?.bandwidth,
             ];
     
             output['iops'] = [
-                fioOutputs[recordSize][0].iops,
-                fioOutputs[recordSize][1].iops,
-                fioOutputs[recordSize][2].iops,
-                fioOutputs[recordSize][3].iops,
+                fioOutputs[recordSize][0]?.iops,
+                fioOutputs[recordSize][1]?.iops,
+                fioOutputs[recordSize][2]?.iops,
+                fioOutputs[recordSize][3]?.iops,
             ];
+
+            if (output['bandwidth'].includes(undefined) || output['iops'].includes(undefined)) {
+                console.error(output);
+            }
     
             finalOutput.push(output);
     
