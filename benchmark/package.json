@@ -14,7 +14,7 @@
     "@45drives/cockpit-vue-components": "^0.0.4-beta5",
     "@tailwindcss/forms": "^0.5.2",
     "fs-exists-sync": "^0.1.0",
-    "require": "^2.4.20",
+    "require": "^0.4.4",
     "requirejs": "^2.3.6",
     "vee-validate": "^4.6.6",
     "vue": "^3.2.37",

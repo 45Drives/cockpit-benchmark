@@ -71,13 +71,11 @@
       <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2" disabled>Download Report</button>
       <!-- <div id="spinner"
         class="aspect-square animate-spin border-neutral-300 border-t-neutral-500 dark:border-neutral-500 dark:border-t-neutral-200 rounded-full hidden" /> -->
+
       <div id="benchmarkProgress" class="progress-container progress-description-left mt-4 hidden">
         <div class="progress-description">
-          <div id="progressBar" class="w-full mt-5 bg-gray-200 rounded-full dark:bg-gray-700 h-10">
-            <div id="progressActive" role="progressbar"
-              class="bg-primary text-m font-medium text-white-100 text-center p-0.5 leading-none rounded-full h-10"
-              aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"> {{ percent }}</div>
-            <span class="sr-only"></span>
+          <div class="bg-gray-200 rounded-full overflow-hidden">
+            <div class="h-2 bg-green-600 rounded-full" style="width: {{ progPercent }}%" />
           </div>
         </div>
       </div>
@@ -91,8 +89,8 @@
         <div id="output" class="hidden float-right">
           <label class="text-label mr-2">Output</label>
           <select id="chartType" v-model="chartType" class="switcher input-textlike bg-transparent hidden">
-            <option name="chart-type" id="chart-type-iops" value="iops" selected>IOPS</option>
-            <option name="chart-type" id="chart-type-bandwidth" value="bandwith">Bandwidth</option>
+            <option id="chart-type-iops" value="iops" selected>IOPS</option>
+            <option id="chart-type-bandwidth" value="bandwith">Bandwidth</option>
           </select>
           <canvas id="benchmark-output-chart"></canvas>
         </div>
@@ -105,9 +103,9 @@
 
 <script setup>
 import "@45drives/cockpit-css/src/index.css";
-import { useSpawn } from '@45drives/cockpit-helpers';
+import "@45drives/cockpit-helpers/src/useSpawn.js";
 import { ref, computed } from "vue";
-
+import { runCommand } from "../../OG - benchmark/components/functions";
 
 
 //Input ->  Tool, Type, Size + Unit, IODepth, Runtime, Path
@@ -120,10 +118,9 @@ const runtime = ref('2');
 const testPath = ref('');
 
 const testSize = computed(() => fileSize.value * fileSizeUnit.value);
-const percent = ref('');
+const progPercent = 0;
 const downloadFormat = ref("xlsx");
 const chartType = ref("iops");
-
 
 
 //LaunchBTN -> @click -> launchFunction -> Validate fields (fileSize, runtime, testPath)
@@ -132,32 +129,30 @@ const pathExists = ref(false);
 
 const checkIfExists = async () => {
   try {
-    await useSpawn(['stat', testPath], { superuser: 'try' }).promise();
+    await useSpawn(['stat', testPath.value], { superuser: 'try' }).promise();
     pathExists.value = true;
     console.log('path exists');
-    console.log(testPath);
+    console.log(testPath.value);
 
   } catch {
     pathExists.value = false;
     console.log('path no exist');
-    console.log(testPath);
+    console.log(testPath.value);
   }
 };
 
 
-function button() {
-  //showing output and progress bars for debugging
+//showing output and progress bars for debugging
 
+function button() {
   let benchOut = document.getElementById("benchmarkOutput");
   let benchProg = document.getElementById("benchmarkProgress");
-  let progBar = document.getElementById("progressBar");
   // let spin = document.getElementById("spinner");
   let out = document.getElementById("output");
   let chart = document.getElementById("chartType");
 
   benchOut.classList.remove('hidden');
   benchProg.classList.remove('hidden');
-  progBar.classList.remove('hidden');
   // spin.classList.remove('hidden');
   out.classList.remove('hidden');
   chart.classList.remove('hidden');
@@ -168,9 +163,35 @@ function button() {
 
 
 //FIO Command ->
-// ['benchmarkType', '--directory', testPath, '--name', fileName, '--rw', typeLut[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'].filter(x => x !== null);
+// ['benchmarkType', '--directory', testPath, '--name', fileName, '--rw', testType[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'].filter(x => x !== null);
 
 
+const testType = ['write', 'read', 'randread', 'randwrite'];
+let idx = 0;
+let escapedError = 0;
+let fioOutputs = [];
+
+
+testType.forEach(element => {
+  try {
+    let fileName = `fio.${idx}`;
+    let args = [`${benchmarkType}`, '--directory', testPath, '--name', fileName, '--rw', testType[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'].filter(x => x !== null);
+
+    // let data = await runCommand(args);
+    // fioOutputs[idx] = this.parse(data, testType[idx].includes('read') ? 'read' : 'write');
+
+    // ProgressBar.update(((idx + 1) / testType.length) * 100, `${idx + 1}/${testType.length}`);
+
+    // await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
+
+  } catch (error) {
+    console.error(error);
+    escapedError = true;
+    return;
+  }
+
+  idx += 1;
+});
 
 
 //Run Job(s) -> ProgressBar Responds (using ref)
