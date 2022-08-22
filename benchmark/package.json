@@ -1,0 +1,31 @@
+{
+  "name": "benchmark",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@45drives/cockpit-css": "^0.1.12",
+    "@45drives/cockpit-helpers": "^0.1.19",
+    "@45drives/cockpit-vue-components": "^0.0.4-beta5",
+    "@tailwindcss/forms": "^0.5.2",
+    "fs-exists-sync": "^0.1.0",
+    "require": "^2.4.20",
+    "requirejs": "^2.3.6",
+    "vee-validate": "^4.6.6",
+    "vue": "^3.2.37",
+    "yup": "^0.32.11"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^3.0.0",
+    "autoprefixer": "^10.4.8",
+    "postcss": "^8.4.16",
+    "tailwindcss": "^3.1.8",
+    "vite": "^3.0.0",
+    "vite-plugin-vue-type-imports": "^0.2.0"
+  }
+}
