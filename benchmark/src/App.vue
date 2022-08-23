@@ -29,8 +29,6 @@
         <div class="absolute inset-y-0 right-0 flex items-center">
           <label class="sr-only">Unit</label>
           <select id="fileSizeUnit" v-model="fileSizeUnit" class="input-textlike border-transparent bg-transparent">
-            <option :value="1">B</option>
-            <option :value="1024 ** 1">KiB</option>
             <option :value="1024 ** 2">MiB</option>
             <option :value="1024 ** 3">GiB</option>
           </select>
@@ -62,12 +60,14 @@
 
     <div id="6">
       <label class="text-label mr-2">Test Path</label>
-      <input id="testPath" v-model="testPath" type="text" class="input-textlike" placeholder="/mnt/hdd" />
-
+      <input @change="validateInputs()" id="testPath" v-model="testPath" type="text" class="input-textlike"
+        placeholder="/mnt/hdd" />
+      <p v-if="testPathFeedback">{{ testPathFeedback }}</p>
     </div>
 
     <div>
-      <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="button()">Launch</button>
+      <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="button()"
+        :disabled="!inputsValid">Launch</button>
       <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2" disabled>Download Report</button>
       <!-- <div id="spinner"
         class="aspect-square animate-spin border-neutral-300 border-t-neutral-500 dark:border-neutral-500 dark:border-t-neutral-200 rounded-full hidden" /> -->
@@ -75,7 +75,7 @@
       <div id="benchmarkProgress" class="progress-container progress-description-left mt-4 hidden">
         <div class="progress-description">
           <div class="bg-gray-200 rounded-full overflow-hidden">
-            <div class="h-2 bg-green-600 rounded-full" style="width: {{ progPercent }}%" />
+            <div class="h-2 bg-green-600 rounded-full" :style="{ width: `${progPercent}%` }"></div>
           </div>
         </div>
       </div>
@@ -103,47 +103,39 @@
 
 <script setup>
 import "@45drives/cockpit-css/src/index.css";
-import "@45drives/cockpit-helpers/src/useSpawn.js";
+import { useSpawn } from "@45drives/cockpit-helpers";
 import { ref, computed } from "vue";
-import { runCommand } from "../../OG - benchmark/components/functions";
-
+import mergeDeep from "./assignObjectRecursive";
 
 //Input ->  Tool, Type, Size + Unit, IODepth, Runtime, Path
 const benchmarkTool = ref('fio');
 const benchmarkType = ref('throughput');
-const fileSize = ref();
-const fileSizeUnit = ref(1);
+const fileSize = ref(1);
+const fileSizeUnit = ref(1024 ** 3);
 const ioDepth = ref('16');
 const runtime = ref('2');
 const testPath = ref('');
 
 const testSize = computed(() => fileSize.value * fileSizeUnit.value);
-const progPercent = 0;
+const progPercent = ref(0);
 const downloadFormat = ref("xlsx");
 const chartType = ref("iops");
+const inputsValid = ref(true);
+const testPathFeedback = ref('');
 
+async function validateInputs() {
+  let result = true;
+  testPathFeedback.value = '';
+  if (!(await checkIfExists(testPath.value))) {
+    result = false;
+    testPathFeedback.value = 'Path does not exist';
+  }
+  inputsValid.value = result;
+}
 
 //LaunchBTN -> @click -> launchFunction -> Validate fields (fileSize, runtime, testPath)
 
-const pathExists = ref(false);
-
-const checkIfExists = async () => {
-  try {
-    await useSpawn(['stat', testPath.value], { superuser: 'try' }).promise();
-    pathExists.value = true;
-    console.log('path exists');
-    console.log(testPath.value);
-
-  } catch {
-    pathExists.value = false;
-    console.log('path no exist');
-    console.log(testPath.value);
-  }
-};
-
-
 //showing output and progress bars for debugging
-
 function button() {
   let benchOut = document.getElementById("benchmarkOutput");
   let benchProg = document.getElementById("benchmarkProgress");
@@ -157,54 +149,125 @@ function button() {
   out.classList.remove('hidden');
   chart.classList.remove('hidden');
 
-  //checking file path
-  checkIfExists();
+
+  launchTests();
 }
 
 
-//FIO Command ->
-// ['benchmarkType', '--directory', testPath, '--name', fileName, '--rw', testType[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'].filter(x => x !== null);
-
-
-const testType = ['write', 'read', 'randread', 'randwrite'];
-let idx = 0;
-let escapedError = 0;
-let fioOutputs = [];
-
-
-testType.forEach(element => {
+const checkIfExists = async (path) => {
   try {
-    let fileName = `fio.${idx}`;
-    let args = [`${benchmarkType}`, '--directory', testPath, '--name', fileName, '--rw', testType[idx], '-bs', recordSize, '--size', fileSize.join(''), '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'].filter(x => x !== null);
-
-    // let data = await runCommand(args);
-    // fioOutputs[idx] = this.parse(data, testType[idx].includes('read') ? 'read' : 'write');
-
-    // ProgressBar.update(((idx + 1) / testType.length) * 100, `${idx + 1}/${testType.length}`);
-
-    // await deleteFiles([`${testPath}${testPath.endsWith('/') ? '' : '/'}${fileName}.*`]);
+    await useSpawn(['test', '-d', path], { superuser: 'try' }).promise();
+    return true;
 
   } catch (error) {
+    return false;
+  }
+};
+
+
+async function runFioJob({
+  threadCount, recordSize, fileName, fileSize, testPath, ioDepth, runtime, testType
+}) {
+  try {
+    let args = [benchmarkTool.value, '--directory', testPath, '--name', fileName, '--rw', testType, '-bs', recordSize, '--size', fileSize, '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'];
+
+    const proc = await useSpawn(args, { superuser: 'try' }).promise();
+    const output = JSON.parse(proc.stdout);
+
+    const [job] = output.jobs;
+
+    switch (testType) {
+      case 'write':
+        return {
+          iops: {
+            write: { [recordSize]: job.write.iops }
+          },
+          bandwidth: {
+            write: { [recordSize]: job.write.bw }
+          },
+        }
+      case 'read':
+        return {
+          iops: {
+            read: { [recordSize]: job.read.iops }
+          },
+          bandwidth: {
+            read: { [recordSize]: job.read.bw }
+          },
+        }
+      case 'randread':
+        return {
+          iops: {
+            randread: { [recordSize]: job.read.iops }
+          },
+          bandwidth: {
+            randread: { [recordSize]: job.read.bw }
+          },
+        }
+      case 'randwrite':
+        return {
+          iops: {
+            randwrite: { [recordSize]: job.write.iops }
+          },
+          bandwidth: {
+            randwrite: { [recordSize]: job.write.bw }
+          },
+        }
+    }
+    return {
+    }
+  } catch (error) {
     console.error(error);
-    escapedError = true;
-    return;
   }
 
-  idx += 1;
-});
+}
 
+async function launchTests() {
+  const testTypes = ['write', 'read', 'randread', 'randwrite'];
+  const results = {};
+  let recordSizes = [];
+  if (benchmarkType.value == 'throughput') {
+    recordSizes.push('1M');
+  }
+  else if (benchmarkType.value == 'iops') {
+    recordSizes.push('4k');
+  } else if (benchmarkType.value == 'spectrum') {
+    recordSizes.push('4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M');
+  }
+  progPercent.value = 0;
+  for (const testType of testTypes) {
+    const result = await runFioJobs({
+      threadCount: 1,
+      recordSizes,
+      fileName: 'fiotest',
+      fileSize: testSize.value,
+      testPath: testPath.value,
+      ioDepth: ioDepth.value,
+      runtime: runtime.value,
+      testType,
+    }, testTypes.length)
 
-//Run Job(s) -> ProgressBar Responds (using ref)
+    mergeDeep(results, result);
+  }
+  console.log(results);
+}
 
+async function runFioJobs({
+  threadCount, recordSizes, fileName, fileSize, testPath, ioDepth, runtime, testType
+}, totalJobs) {
 
+  const results = {};
+  for (const recordSize of recordSizes) {
 
-//JSON Output -> Save to directory
+    const result = await runFioJob({
+      threadCount, recordSize, fileName, fileSize, testPath, ioDepth, runtime, testType
+    })
 
-
-
-//Parse JSON file -> Tool, Type, RecordSize, Date, Reads(mb/s), Writes(mb/s), RandReads(mb/s), RandWrites(mb/s)
-//                                                 Reads(IOPS), Writes(IOPS), RandReads(IOPS), RandWrites(IOPS)
-
+    mergeDeep(results, result);
+    progPercent.value += 100 / recordSizes.length / totalJobs;
+  }
+  return results;
+}
 
 
 //Export to chart -> XLSX/CSV/ODS
