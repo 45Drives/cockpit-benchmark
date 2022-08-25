@@ -18,9 +18,11 @@
     "requirejs": "^2.3.6",
     "vee-validate": "^4.6.6",
     "vue": "^3.2.37",
+    "xlsx": "^0.18.5",
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@types/xlsx": "^0.0.36",
     "@vitejs/plugin-vue": "^3.0.0",
     "autoprefixer": "^10.4.8",
     "postcss": "^8.4.16",
