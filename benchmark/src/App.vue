@@ -146,7 +146,7 @@ const benchStatus = ref('');
 const benchPercent = ref('');
 const benchOut = ref('');
 const chartOut = ref('');
-const results = ref({});
+const results = ref([]);
 
 XLSX.set_fs(fs);
 
@@ -208,7 +208,7 @@ async function launchTests() {
   benchmarkFeedback.value = 'Testing...';
 
   const testTypes = ['write', 'read', 'randread', 'randwrite'];
-  const results = {};
+  const testResults = [];
   let recordSizes = [];
   const fileName = 'FIO-Benchmark';
 
@@ -220,23 +220,22 @@ async function launchTests() {
     recordSizes.push('4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M');
   }
   progPercent.value = 0;
-  for (const testType of testTypes) {
+  for (const recordSize of recordSizes) {
     const result = await runFioJobs({
       threadCount: 1,
+      recordSize,
       recordSizes,
       fileName,
       fileSize: testSize.value,
       testPath: testPath.value,
       ioDepth: ioDepth.value,
       runtime: runtime.value,
-      testType,
     }, testTypes.length)
 
-    mergeDeep(results, result);
+    testResults.push(result)
   }
 
-  console.log(results);
-
+  console.log(testResults);
 
   benchmarkFeedback.value = 'Testing completed.';
   testInProgress.value = false;
@@ -245,15 +244,15 @@ async function launchTests() {
 
   let file = fileName + '.0.0';
   await deleteFiles(file);
-  return results;
+  results.value = testResults;
 }
 
 async function runFioJobs({
-  threadCount, recordSizes, fileName, fileSize, testPath, ioDepth, runtime, testType
+  threadCount, recordSize, recordSizes, fileName, fileSize, testPath, ioDepth, runtime,
 }, totalJobs) {
-
+  const testTypes = ['write', 'read', 'randread', 'randwrite'];
   const results = {};
-  for (const recordSize of recordSizes) {
+  for (const testType of testTypes) {
 
     const result = await runFioJob({
       threadCount, recordSize, fileName, fileSize, testPath, ioDepth, runtime, testType
@@ -278,47 +277,47 @@ async function runFioJob({
 
     switch (testType) {
       case 'write':
-        const writeBW = ((job.write.bw / 976.6) / runtime).toFixed(2);
+        const writeBW = ((job.write.bw / 1000) / runtime).toFixed(2);
         return {
           name: job.jobname,
           tool: benchmarkTool.value,
           type: benchmarkType.value,
           recSize: recordSize,
           iops: {
-            write: { [recordSize]: (job.write.iops.toFixed(2)) }
+            write: (job.write.iops.toFixed(2))
           },
           bandwidth: {
-            write: { [recordSize]: `${writeBW} MB/S` }
+            write: `${writeBW}`
           },
         }
       case 'read':
-        const readBW = (((job.read.bw / 976.6) / runtime).toFixed(2));
+        const readBW = (((job.read.bw / 1000) / runtime).toFixed(2));
         return {
           iops: {
-            read: { [recordSize]: (job.read.iops.toFixed(2)) }
+            read: (job.read.iops.toFixed(2))
           },
           bandwidth: {
-            read: { [recordSize]: `${readBW} MB/S` }
+            read: `${readBW}`
           },
         }
       case 'randread':
-        const randReadBW = (((job.read.bw / 976.6) / runtime).toFixed(2));
+        const randReadBW = (((job.read.bw / 1000) / runtime).toFixed(2));
         return {
           iops: {
-            randread: { [recordSize]: (job.read.iops.toFixed(2)) }
+            randread: (job.read.iops.toFixed(2))
           },
           bandwidth: {
-            randread: { [recordSize]: `${randReadBW} MB/S` }
+            randread: `${randReadBW}`
           },
         }
       case 'randwrite':
-        const randWriteBW = ((job.write.bw / 976.6) / runtime).toFixed(2);
+        const randWriteBW = ((job.write.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
-            randwrite: { [recordSize]: (job.write.iops.toFixed(2)) }
+            randwrite: (job.write.iops.toFixed(2))
           },
           bandwidth: {
-            randwrite: { [recordSize]: `${randWriteBW} MB/S` }
+            randwrite: `${randWriteBW}`
           },
         }
     }
@@ -327,7 +326,6 @@ async function runFioJob({
   } catch (error) {
     console.error(error);
   }
-
 }
 
 const deleteFiles = async (file) => {
@@ -346,33 +344,33 @@ function genSheet(data) {
   const aoa = [
     [
       'Tool',
-      data.type !== null ? 'Test Type' : null,
+      data[0].testType !== null ? 'Test Type' : null,
       'Record Size',
       'Date',
-      ...(data.bandwidth ? ['Reads (MB/s)',
-        'Writes (MB/s)',
-        'Random Reads (MB/s)',
-        'Random Writes (MB/s)'] : []),
-      ...(data.iops ? [`Reads (IOPS)`,
-        `Writes (IOPS)`,
-        `Random Reads (IOPS)`,
-        `Random Writes (IOPS)`] : []),
-    ].filter(x => x !== null),
-    ...data.data.map(x => [
-      data.tool,
-      data.type ?? null,
-      data.recSize,
+      'Reads (MB/s)',
+      'Writes (MB/s)',
+      'Random Reads (MB/s)',
+      'Random Writes (MB/s)',
+      `Reads (IOPS)`,
+      `Writes (IOPS)`,
+      `Random Reads (IOPS)`,
+      `Random Writes (IOPS)`,
+    ], ...data.map(result => ([
+      result.tool,
+      result.type ?? null,
+      result.recSize,
       date.toLocaleString(),
-      x.bandwidth?.write,
-      x.bandwidth?.read,
-      x.bandwidth?.randread,
-      x.bandwidth?.randwrite,
-      x.iops?.write,
-      x.iops?.read,
-      x.iops?.randread,
-      x.iops?.randwrite,
-    ].filter(x => (x ?? null) !== null)),
+      result.bandwidth.read,
+      result.bandwidth.write,
+      result.bandwidth.randread,
+      result.bandwidth.randwrite,
+      result.iops.read,
+      result.iops.write,
+      result.iops.randread,
+      result.iops.randwrite,
+    ]))
   ];
+
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(aoa)
 
@@ -385,7 +383,6 @@ function genSheet(data) {
     `benchmark-${data.tool}-${data.type}-${dateFormatted}-${timeFormatted}.${downloadFormat.value}`
   );
 }
-
 
 //Export to chart -> XLSX/CSV/ODS
 
