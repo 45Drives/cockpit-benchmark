@@ -2,14 +2,14 @@
   <div id="benchmarkForm" class="centered-column w-full gap-content flex flex-col items-stretch text-left">
     <label class="text-header">Benchmarks</label>
 
-    <div>
+    <div id="tool">
       <label class="text-label">Benchmark Tool</label>
       <select id="benchmarkTool" v-model="benchmarkTool" class="input-textlike w-full">
         <option value="fio" selected>FIO</option>
       </select>
     </div>
 
-    <div>
+    <div id="type">
       <label class="text-label">Benchmark Type</label>
       <select id="benchmarkType" v-model="benchmarkType" class="input-textlike w-full">
         <option value="throughput">Max Throughput</option>
@@ -18,7 +18,7 @@
       </select>
     </div>
 
-    <div>
+    <div id="size">
       <label class="text-label mr-2">File Size</label>
       <div class="relative rounded-md shadow-sm inline w-full">
         <input @change="fileSizeNum()" id="fileSize" v-model="fileSize" type="text"
@@ -34,7 +34,7 @@
       <p class="text-danger" v-if="fileSizeNumFeedback">{{ fileSizeNumFeedback }}</p>
     </div>
 
-    <div>
+    <div id="depth">
       <label class="text-label mr-2">IO Depth</label>
       <select id="ioDepth" v-model="ioDepth" class="input-textlike bg-transparent">
         <option value="1">1</option>
@@ -48,25 +48,28 @@
       </select>
     </div>
 
-    <div>
+    <div id="time">
       <label class="text-label mr-2">Runtime</label>
       <input @change="runtimeCheck()" id="runtime" v-model="runtime" type="number" class="input-textlike" default="2" />
       <p class="text-danger" v-if="runtimeFeedback">{{ runtimeFeedback }}</p>
     </div>
 
-    <div>
+    <div id="path">
       <label class="text-label mr-2">Test Path</label>
       <input @change="validateFilePath()" id="testPath" v-model="testPath" type="text" class="input-textlike"
         placeholder="/mnt/hdd" />
       <p class="text-danger" v-if="testPathFeedback">{{ testPathFeedback }}</p>
     </div>
 
-    <div>
+    <div id="buttons">
       <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="launchTests()"
         :disabled="!pathValid || testInProgress || !numberValid || !runtimeValid">Launch</button>
       <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2" :disabled="testInProgress || !testCompleted"
         @click="genSheet(results)">Download
         Report</button>
+    </div>
+
+    <div id="progress">
       <div ref="benchProg" class="progress-container progress-description-left mt-4" :class="{ hidden: hiddenProgBar }">
         <div class="progress-description">
           <div class="flex justify-between mb-1">
@@ -83,6 +86,9 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div id="output">
       <div ref="benchOut" class="benchmark-output mt-6 text-center float-left" :class="{ hidden: hiddenOutput }">
         <label class="text-label mr-2">Download Format</label>
         <select id="downloadFormat" v-model="downloadFormat" class="input-textlike bg-transparent">
@@ -90,17 +96,23 @@
           <option value="csv">CSV</option>
           <option value="ods">ODS</option>
         </select>
-        <div ref="chartOut" class=" float-right" :class="{ hidden: hiddenOutput }">
-          <label class="text-label mr-2">Output</label>
+        <div ref="chartOut" class="float-right ml-10" :class="{ hidden: hiddenOutput }">
+          <label class="text-label mr-2">Chart Output</label>
           <select ref="chartOut" v-model="chartType" class="switcher input-textlike bg-transparent"
             :class="{ hidden: hiddenOutput }">
             <option id="chart-type-iops" value="iops" selected>IOPS</option>
             <option id="chart-type-bandwidth" value="bandwith">Bandwidth</option>
           </select>
-          <canvas id="benchmark-output-chart"></canvas>
         </div>
       </div>
     </div>
+
+
+    <div id="chart">
+      <BarChart :class="{ hidden: hiddenOutput }" />
+    </div>
+
+
 
   </div>
 
@@ -112,7 +124,7 @@ import { useSpawn } from "@45drives/cockpit-helpers";
 import { ref, computed } from "vue";
 import mergeDeep from "./assignObjectRecursive";
 import * as XLSX from 'xlsx/xlsx.mjs';
-import * as fs from 'fs';
+import BarChart from './components/BarChart.vue';
 
 
 const benchmarkTool = ref('fio');
@@ -123,11 +135,12 @@ const ioDepth = ref('16');
 const runtime = ref('2');
 const testPath = ref('/storage/fiotest');
 const testSize = computed(() => fileSize.value * fileSizeUnit.value);
+const chartType = ref("iops");
 
 const progPercent = ref(0);
 const downloadFormat = ref("xlsx");
-const chartType = ref("iops");
 
+const chartOut = ref('');
 const pathValid = ref(true);
 const numberValid = ref(true);
 const runtimeValid = ref(true);
@@ -145,10 +158,12 @@ const benchProg = ref('');
 const benchStatus = ref('');
 const benchPercent = ref('');
 const benchOut = ref('');
-const chartOut = ref('');
 const results = ref([]);
 
-XLSX.set_fs(fs);
+const props = defineProps({
+
+})
+
 
 async function validateFilePath() {
   let result = true;
@@ -201,6 +216,7 @@ function runtimeCheck() {
 }
 
 async function launchTests() {
+
   hiddenOutput.value = true;
   hiddenProgBar.value = false;
   testCompleted.value = false;
@@ -245,6 +261,7 @@ async function launchTests() {
   let file = fileName + '.0.0';
   await deleteFiles(file);
   results.value = testResults;
+  // gatherData(results);
 }
 
 async function runFioJobs({
@@ -284,27 +301,27 @@ async function runFioJob({
           type: benchmarkType.value,
           recSize: recordSize,
           iops: {
-            write: (job.write.iops.toFixed(2))
+            write: (job.write.iops.toFixed(0))
           },
           bandwidth: {
             write: `${writeBW}`
           },
         }
       case 'read':
-        const readBW = (((job.read.bw / 1000) / runtime).toFixed(2));
+        const readBW = ((job.read.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
-            read: (job.read.iops.toFixed(2))
+            read: (job.read.iops.toFixed(0))
           },
           bandwidth: {
             read: `${readBW}`
           },
         }
       case 'randread':
-        const randReadBW = (((job.read.bw / 1000) / runtime).toFixed(2));
+        const randReadBW = ((job.read.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
-            randread: (job.read.iops.toFixed(2))
+            randread: (job.read.iops.toFixed(0))
           },
           bandwidth: {
             randread: `${randReadBW}`
@@ -314,7 +331,7 @@ async function runFioJob({
         const randWriteBW = ((job.write.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
-            randwrite: (job.write.iops.toFixed(2))
+            randwrite: (job.write.iops.toFixed(0))
           },
           bandwidth: {
             randwrite: `${randWriteBW}`
@@ -380,13 +397,42 @@ function genSheet(data) {
   const timeFormatted = `${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}-${date.getTime()}`;
 
   XLSX.writeFile(wb,
-    `benchmark-${data.tool}-${data.type}-${dateFormatted}-${timeFormatted}.${downloadFormat.value}`
+    `benchmark-${data[0].tool}-${data[0].type}-${dateFormatted}-${timeFormatted}.${downloadFormat.value}`
   );
 }
 
-//Export to chart -> XLSX/CSV/ODS
+// function gatherData(data) {
+//   if (data === null) return;
 
-//Download Chart
+//   console.log(data);
+//   const iopsData = [
+//     ...(data => ([
+//       data.iops.read,
+//       data.iops.write,
+//       data.iops.randread,
+//       data.iops.randwrite,
+//     ]))
+//   ];
+
+//   const bandData = [
+//     ...(data => ([
+//       data.bandwidth.read,
+//       data.bandwidth.write,
+//       data.bandwidth.randread,
+//       data.bandwidth.randwrite,
+//     ]))
+//   ];
+
+//   if (benchmarkType.value == 'iops') {
+//     return iopsData;
+//   } else if (benchmarkType.value == 'throughput') {
+//     return bandData;
+//   } else if (benchmarkType.value == 'spectrum') {
+//     const spectData = [...iopsData, ...bandData];
+//     return spectData;
+//   }
+// }
+
 
 </script>
 
