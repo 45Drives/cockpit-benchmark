@@ -1,109 +1,85 @@
 <template>
   <div>
-    <canvas id="myChart" width=".25" height=".25"></canvas>
+    <canvas id="myChart" height="325"></canvas>
   </div>
 </template>
 
 <script>
 import Chart from 'chart.js/auto';
-
+import { onMounted } from 'vue';
 
 export default {
   name: 'BarChart',
   props: {
-    chartData: String,
+    chartData: Array,
+    dataType: String,
+    labels: Array
   },
-  charting(chartData, label) {
-    const ctx = document.getElementById('myChart');
+  setup({ chartData, dataType, labels }) {
+    onMounted(() => {
+      const ctx = document.getElementById('myChart');
 
-    const myChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: [label],
-        // 1M or 1k or
-        // '4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M'
-        datasets: [
-          {
-            label: "Reads (IOPS)",
-            data: [],
-            backgroundColor: ['#4DC9F6'],
-            borderColor: ['#4DC9F6'],
-            borderWidth: 1
-          },
-          {
-            label: "Writes (IOPS)",
-            data: [],
-            backgroundColor: ['#0A88C7'],
-            borderColor: ['#0A88C7'],
-            borderWidth: 1
-          },
-          {
-            label: "Random Reads (IOPS)",
-            data: [],
-            backgroundColor: ['#0E68C5'],
-            borderColor: ['#0E68C5'],
-            borderWidth: 1
-          },
-          {
-            label: "Random Writes (IOPS)",
-            data: [],
-            backgroundColor: ['#0D45C1'],
-            borderColor: ['#0D45C1'],
-            borderWidth: 1
-          },
-
-          {
-            label: "Reads (MB/s)",
-            data: [],
-            backgroundColor: ['#4DC9F6'],
-            borderColor: ['#4DC9F6'],
-            borderWidth: 1
-          },
-          {
-            label: "Writes (MB/s)",
-            data: [],
-            backgroundColor: ['#0A88C7'],
-            borderColor: ['#0A88C7'],
-            borderWidth: 1
-          },
-          {
-            label: "Random Reads (MB/s)",
-            data: [],
-            backgroundColor: ['#0E68C5'],
-            borderColor: ['#0E68C5'],
-            borderWidth: 1
-          },
-          {
-            label: "Random Writes (MB/s)",
-            data: [],
-            backgroundColor: ['#0D45C1'],
-            borderColor: ['#0D45C1'],
-            borderWidth: 1
-          },
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
+      const options = {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Reads",
+              data: chartData.map(result =>
+                Number(result[dataType].read)),
+              backgroundColor: ['#94a3b8'],
+              borderColor: ['#94a3b8'],
+              borderWidth: 1
+            },
+            {
+              label: "Writes",
+              data: chartData.map(result =>
+                Number(result[dataType].write)),
+              backgroundColor: ['#64748b'],
+              borderColor: ['#64748b'],
+              borderWidth: 1
+            },
+            {
+              label: "Random Reads",
+              data: chartData.map(result =>
+                Number(result[dataType].randread)),
+              backgroundColor: ['#475569'],
+              borderColor: ['#475569'],
+              borderWidth: 1
+            },
+            {
+              label: "Random Writes",
+              data: chartData.map(result =>
+                Number(result[dataType].randwrite)),
+              backgroundColor: ['#334155'],
+              borderColor: ['#334155'],
+              borderWidth: 1
+            },
+          ]
         },
-        plugins: {
-          legend: {
-            position: 'top'
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
           },
-          title: {
-            display: true,
-            text: 'Benchmark Data'
+          plugins: {
+            legend: {
+              position: 'top'
+            },
+            title: {
+              display: true,
+              text: `Benchmark Data (${dataType.toUpperCase()})`
+            }
           }
         }
       }
-    });
-
-    myChart;
+      const myChart = new Chart(ctx, options);
+    })
   }
 }
-
 
 </script>
