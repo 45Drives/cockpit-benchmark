@@ -1,12 +1,12 @@
 <template>
   <div>
-    <canvas id="myChart" height="325"></canvas>
+    <canvas id="myChart" height="300"></canvas>
   </div>
 </template>
 
 <script>
 import Chart from 'chart.js/auto';
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 
 export default {
   name: 'BarChart',
@@ -16,6 +16,8 @@ export default {
     labels: Array
   },
   setup({ chartData, dataType, labels }) {
+    const chart = ref();
+
     onMounted(() => {
       const ctx = document.getElementById('myChart');
 
@@ -77,8 +79,10 @@ export default {
           }
         }
       }
-      const myChart = new Chart(ctx, options);
+      chart.value = new Chart(ctx, options);
+
     })
+    return { chart }
   }
 }
 

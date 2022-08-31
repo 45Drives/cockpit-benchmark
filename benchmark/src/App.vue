@@ -2,14 +2,14 @@
   <div id="benchmarkForm" class="centered-column w-full gap-content flex flex-col items-stretch text-left">
     <label class="text-header">Benchmarks</label>
 
-    <div id="tool">
+    <div id="toolDiv">
       <label class="text-label">Benchmark Tool</label>
       <select id="benchmarkTool" v-model="benchmarkTool" class="input-textlike w-full">
         <option value="fio" selected>FIO</option>
       </select>
     </div>
 
-    <div id="type">
+    <div id="typeDiv">
       <label class="text-label">Benchmark Type</label>
       <select id="benchmarkType" v-model="benchmarkType" class="input-textlike w-full">
         <option value="throughput">Max Throughput</option>
@@ -18,7 +18,7 @@
       </select>
     </div>
 
-    <div id="size">
+    <div id="sizeDiv">
       <label class="text-label mr-2">File Size</label>
       <div class="relative rounded-md shadow-sm inline w-full">
         <input @change="fileSizeNum()" id="fileSize" v-model="fileSize" type="text"
@@ -34,7 +34,7 @@
       <p class="text-danger" v-if="fileSizeNumFeedback">{{ fileSizeNumFeedback }}</p>
     </div>
 
-    <div id="depth">
+    <div id="depthDiv">
       <label class="text-label mr-2">IO Depth</label>
       <select id="ioDepth" v-model="ioDepth" class="input-textlike bg-transparent">
         <option value="1">1</option>
@@ -48,20 +48,20 @@
       </select>
     </div>
 
-    <div id="time">
+    <div id="timeDiv">
       <label class="text-label mr-2">Runtime</label>
       <input @change="runtimeCheck()" id="runtime" v-model="runtime" type="number" class="input-textlike" default="2" />
       <p class="text-danger" v-if="runtimeFeedback">{{ runtimeFeedback }}</p>
     </div>
 
-    <div id="path">
+    <div id="pathDiv">
       <label class="text-label mr-2">Test Path</label>
       <input @change="validateFilePath()" id="testPath" v-model="testPath" type="text" class="input-textlike"
         placeholder="/mnt/hdd" />
       <p class="text-danger" v-if="testPathFeedback">{{ testPathFeedback }}</p>
     </div>
 
-    <div id="buttons">
+    <div id="buttonDiv">
       <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="launchTests()"
         :disabled="!pathValid || testInProgress || !numberValid || !runtimeValid">Launch</button>
       <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2" :disabled="testInProgress || !testCompleted"
@@ -69,11 +69,11 @@
         Report</button>
     </div>
 
-    <div id="progress-output">
-      <div ref="benchProg" class="progress-container progress-description-left mt-1" :class="{ hidden: hiddenProgBar }">
+    <div id="outputDiv">
+      <div class="progress-container progress-description-left mt-1" :class="{ hidden: hiddenProgBar }">
         <div class="progress-description">
           <div class="flex justify-between mb-1">
-            <span ref="benchStatus" class="text-secondary float-left" :class="{ hidden: hiddenProgBar }">{{
+            <span class="text-secondary float-left" :class="{ hidden: hiddenProgBar }">{{
                 benchmarkFeedback
             }}</span>
             <span ref="benchPercent" class="text-secondary float-right" :class="{ hidden: hiddenProgBar }">{{
@@ -86,18 +86,16 @@
           </div>
         </div>
       </div>
-      <div ref="benchOut" class="benchmark-output mt-6 text-center float-left" :class="{ hidden: hiddenOutput }">
+      <div class="benchmark-output mt-6 text-center float-left" :class="{ hidden: hiddenOutput }">
         <label class="text-label mr-2">Download Format</label>
         <select id="downloadFormat" v-model="downloadFormat" class="input-textlike bg-transparent">
           <option value="xlsx">XLSX</option>
           <option value="csv">CSV</option>
           <option value="ods">ODS</option>
         </select>
-        <div ref="chartOut" v-if="benchmarkType == 'spectrum'" class="float-right ml-10"
-          :class="{ hidden: hiddenChart }">
+        <div class="float-right ml-10" :class="{ hidden: hiddenChart }">
           <label class="text-label mr-2">Chart Output</label>
-          <select ref="chartOut" v-model="chartType" class="switcher input-textlike bg-transparent"
-            :class="{ hidden: hiddenChart }">
+          <select v-model="chartType" class="switcher input-textlike bg-transparent" :class="{ hidden: hiddenChart }">
             <option id="chart-type-iops" value="iops" selected>IOPS</option>
             <option id="chart-type-bandwidth" value="bandwidth">Bandwidth</option>
           </select>
@@ -105,8 +103,8 @@
       </div>
     </div>
 
-    <div id="chart">
-      <BarChart ref="myChart" :key="results + chartType" :chartData="results" :labels="recordSizes"
+    <div id="chartDiv">
+      <BarChart id="chart" ref="chartRef" :key="componentKey" :chartData="results" :labels="recordSizes"
         :dataType="chartType" v-if="!hiddenChart" />
     </div>
 
@@ -116,8 +114,8 @@
 
 <script setup>
 import "@45drives/cockpit-css/src/index.css";
-import { useSpawn } from "@45drives/cockpit-helpers";
-import { ref, computed } from "vue";
+import { useSpawn, objectURLDownload } from "@45drives/cockpit-helpers";
+import { ref, computed, watch } from "vue";
 import mergeDeep from "./assignObjectRecursive";
 import * as XLSX from 'xlsx/xlsx.mjs';
 import BarChart from './components/BarChart.vue';
@@ -134,7 +132,6 @@ const chartType = ref("iops");
 const progPercent = ref(0);
 const downloadFormat = ref("xlsx");
 
-const chartOut = ref('');
 const pathValid = ref(true);
 const numberValid = ref(true);
 const runtimeValid = ref(true);
@@ -148,13 +145,22 @@ const testCompleted = ref(false);
 const hiddenProgBar = ref(true);
 const hiddenOutput = ref(true);
 const hiddenChart = ref(true);
-const benchProg = ref('');
-const benchStatus = ref('');
 const benchPercent = ref('');
-const benchOut = ref('');
+
 const results = ref([]);
 const recordSizes = ref([]);
 
+const componentKey = ref(0);
+const chartRef = ref();
+
+const forceRerender = () => {
+  if (chartRef.value?.chart) {
+    chartRef.value.chart.destroy();
+    chartRef.value = null;
+  }
+  componentKey.value += 1;
+  hiddenChart.value = true;
+};
 
 async function validateFilePath() {
   let result = true;
@@ -178,7 +184,7 @@ const checkIfExists = async (path) => {
 function fileSizeNum() {
   let result = true;
   fileSizeNumFeedback.value = '';
-  if (isNaN(fileSize.value)) {
+  if (fileSize.value == 0 || isNaN(fileSize.value)) {
     result = false;
     fileSizeNumFeedback.value = 'Please enter numeric values only';
   }
@@ -196,6 +202,7 @@ function runtimeCheck() {
 }
 
 async function launchTests() {
+  forceRerender();
   hiddenOutput.value = true;
   hiddenProgBar.value = false;
   testCompleted.value = false;
@@ -209,6 +216,7 @@ async function launchTests() {
 
   if (benchmarkType.value == 'throughput') {
     recordSizes.value.push('1M');
+    chartType.value = 'bandwidth';
   } else if (benchmarkType.value == 'iops') {
     recordSizes.value.push('4k');
   } else if (benchmarkType.value == 'spectrum') {
@@ -272,7 +280,6 @@ async function runFioJob({
 
     switch (testType) {
       case 'write':
-        const writeBW = ((job.write.bw / 1000) / runtime).toFixed(2);
         return {
           name: job.jobname,
           tool: benchmarkTool.value,
@@ -282,37 +289,34 @@ async function runFioJob({
             write: (job.write.iops.toFixed(0))
           },
           bandwidth: {
-            write: `${writeBW}`
+            write: ((job.write.bw / 1000) / runtime).toFixed(2)
           },
         }
       case 'read':
-        const readBW = ((job.read.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
             read: (job.read.iops.toFixed(0))
           },
           bandwidth: {
-            read: `${readBW}`
+            read: ((job.read.bw / 1000) / runtime).toFixed(2)
           },
         }
       case 'randread':
-        const randReadBW = ((job.read.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
             randread: (job.read.iops.toFixed(0))
           },
           bandwidth: {
-            randread: `${randReadBW}`
+            randread: ((job.read.bw / 1000) / runtime).toFixed(2)
           },
         }
       case 'randwrite':
-        const randWriteBW = ((job.write.bw / 1000) / runtime).toFixed(2);
         return {
           iops: {
             randwrite: (job.write.iops.toFixed(0))
           },
           bandwidth: {
-            randwrite: `${randWriteBW}`
+            randwrite: ((job.write.bw / 1000) / runtime).toFixed(2)
           },
         }
     }
@@ -374,12 +378,24 @@ function genSheet(data) {
   const dateFormatted = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
   const timeFormatted = `${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}-${date.getTime()}`;
 
-  XLSX.writeFile(wb,
-    `benchmark-${data[0].tool}-${data[0].type}-${dateFormatted}-${timeFormatted}.${downloadFormat.value}`
-  );
+  const fileName = `benchmark-${data[0].tool}-${data[0].type}-${dateFormatted}-${timeFormatted}.${downloadFormat.value}`;
+
+  if (window.chrome) {
+    XLSX.writeFile(wb,
+      fileName
+    );
+  } else {
+    const fileData = XLSX.write(wb, { bookType: downloadFormat.value, type: 'array' });
+
+    objectURLDownload(fileData, fileName);
+  }
+
 }
 
+watch(chartType, () => {
+  if (hiddenChart.value == false) {
+    forceRerender();
+    hiddenChart.value = false;
+  }
+})
 </script>
-
-<style>
-</style>
