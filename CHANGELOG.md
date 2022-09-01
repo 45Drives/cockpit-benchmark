@@ -1,4 +1,3 @@
-## Cockpit Benchmark 2.0.0-1
+## Cockpit Benchmark 2.0.0-2
 
-* Reworked plugin with Vue framework
-* Fixed downloads in Firefox
+* Removed Vue favicon

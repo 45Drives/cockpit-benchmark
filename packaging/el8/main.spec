@@ -27,6 +27,8 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Thu Sep 01 2022 Jordan Keough <jkeough@45drives.com> 2.0.0-2
+- Removed Vue favicon
 * Thu Sep 01 2022 Jordan Keough <jkeough@45drives.com> 2.0.0-1
 - Reworked plugin with Vue framework
 - Fixed downloads in Firefox
