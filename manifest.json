@@ -2,8 +2,8 @@
     "__version": "45D-R1",
     "name": "cockpit-benchmark",
     "title": "Cockpit Benchmark",
-    "prerelease": false,
-    "version": "0.2.1",
+    "prerelease": true,
+    "version": "2.0.0",
     "buildVersion": "1",
     "author": "Dawson Della Valle <ddellavalle@45drives.com>",
     "url": "https://github.com/45Drives/cockpit-benchmark",
@@ -35,24 +35,19 @@
     },
     "releases": [
         {
-            "image": "ubuntu-focal-builder",
+            "image": "node-ubuntu-focal-builder",
             "codeName": "focal",
             "type": "deb"
         },
         {
-            "image": "rocky-el8-builder",
+            "image": "node-rocky-el8-builder",
             "codeName": "el8",
-            "type": "el"
-        },
-        {
-            "image": "centos-el7-builder",
-            "codeName": "el7",
             "type": "el"
         }
     ],
     "changelog": {
         "urgency": "medium",
-        "version": "0.2.1",
+        "version": "2.0.0",
         "buildVersion": "1",
         "ignore": [],
         "date": null,

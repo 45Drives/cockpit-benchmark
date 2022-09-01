@@ -18,6 +18,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 %setup -q
 
 %build
+make
 
 %install
 make DESTDIR=%{buildroot} install
@@ -26,6 +27,9 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Thu Sep 01 2022 Jordan Keough <jkeough@45drives.com> 2.0.0-1
+- Reworked plugin with Vue framework
+- Fixed downloads in Firefox
 * Tue Aug 10 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.2.1-1
 - Make content more consistent and clean up page.
 * Tue Aug 10 2021 Dawson Della Valle <ddellavalle@45drives.com> 0.2.0-1
