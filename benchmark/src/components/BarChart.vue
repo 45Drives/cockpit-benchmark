@@ -8,6 +8,7 @@
 import Chart from 'chart.js/auto';
 import { ref, onMounted } from 'vue';
 
+
 export default {
   name: 'BarChart',
   props: {
@@ -17,6 +18,10 @@ export default {
   },
   setup({ chartData, dataType, labels }) {
     const chart = ref();
+    const chartNameLUT = {
+      iops: 'IOPS',
+      bandwidth: 'Bandwidth, MB/s'
+    }
 
     onMounted(() => {
       const ctx = document.getElementById('myChart');
@@ -61,12 +66,17 @@ export default {
           ]
         },
         options: {
+          layout: {
+            padding: 20
+          },
           maintainAspectRatio: false,
           responsive: true,
           scales: {
             y: {
-              beginAtZero: true
-            }
+              beginAtZero: true,
+
+            },
+
           },
           plugins: {
             legend: {
@@ -74,9 +84,9 @@ export default {
             },
             title: {
               display: true,
-              text: `Benchmark Data (${dataType.toUpperCase()})`
+              text: `Benchmark Data (${chartNameLUT[dataType]})`
             }
-          }
+          },
         }
       }
       chart.value = new Chart(ctx, options);

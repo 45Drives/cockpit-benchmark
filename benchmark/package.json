@@ -11,7 +11,6 @@
   "dependencies": {
     "@45drives/cockpit-css": "^0.1.12",
     "@45drives/cockpit-helpers": "^0.1.19",
-    "@45drives/cockpit-vue-components": "^0.0.4-beta5",
     "@tailwindcss/forms": "^0.5.2",
     "chart.js": "^3.9.1",
     "fs-exists-sync": "^0.1.0",
@@ -26,6 +25,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@45drives/cockpit-vue-components": "^0.1.0-beta2",
     "@types/xlsx": "^0.0.36",
     "@vitejs/plugin-vue": "^3.0.0",
     "autoprefixer": "^10.4.8",

@@ -1,115 +1,126 @@
 <template>
-  <div id="benchmarkForm" class="centered-column w-full gap-content flex flex-col items-stretch text-left">
-    <label class="text-header">Benchmarks</label>
+  <div class="h-full flex flex-col overflow-hidden">
+    <HoustonHeader moduleName="Benchmarks" sourceURL="https://github.com/45Drives/cockpit-benchmark"
+      issuesURL="https://github.com/45Drives/cockpit-benchmark/issues" :pluginVersion="pluginVersion"
+      :infoNudgeScrollbar="true" />
 
-    <div id="toolDiv">
-      <label class="text-label">Benchmark Tool</label>
-      <select id="benchmarkTool" v-model="benchmarkTool" class="input-textlike w-full">
-        <option value="fio" selected>FIO</option>
-      </select>
-    </div>
+    <div class="w-full px-8 bg-well text-default grow flex flex-col overflow-y-auto py-8">
 
-    <div id="typeDiv">
-      <label class="text-label">Benchmark Type</label>
-      <select id="benchmarkType" v-model="benchmarkType" class="input-textlike w-full">
-        <option value="throughput">Max Throughput</option>
-        <option value="iops">Max IOPS</option>
-        <option value="spectrum">Performance Spectrum</option>
-      </select>
-    </div>
-
-    <div id="sizeDiv">
-      <label class="text-label mr-2">File Size</label>
-      <div class="relative rounded-md shadow-sm inline w-full">
-        <input @change="fileSizeNum()" id="fileSize" v-model="fileSize" type="text"
-          class="pr-12 input-textlike w-full sm:w-auto" />
-        <div class="absolute inset-y-0 right-0 flex items-center">
-          <label class="sr-only">Unit</label>
-          <select id="fileSizeUnit" v-model="fileSizeUnit" class="input-textlike border-transparent bg-transparent">
-            <option :value="1024 ** 2">MiB</option>
-            <option :value="1024 ** 3">GiB</option>
-          </select>
-        </div>
-      </div>
-      <p class="text-danger" v-if="fileSizeNumFeedback">{{ fileSizeNumFeedback }}</p>
-    </div>
-
-    <div id="depthDiv">
-      <label class="text-label mr-2">IO Depth</label>
-      <select id="ioDepth" v-model="ioDepth" class="input-textlike bg-transparent">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="4">4</option>
-        <option value="8">8</option>
-        <option value="16" selected>16</option>
-        <option value="32">32</option>
-        <option value="64">64</option>
-        <option value="128">128</option>
-      </select>
-    </div>
-
-    <div id="timeDiv">
-      <label class="text-label mr-2">Runtime</label>
-      <input @change="runtimeCheck()" id="runtime" v-model="runtime" type="number" class="input-textlike" default="2" />
-      <p class="text-danger" v-if="runtimeFeedback">{{ runtimeFeedback }}</p>
-    </div>
-
-    <div id="pathDiv">
-      <label class="text-label mr-2">Test Path</label>
-      <input @change="validateFilePath()" id="testPath" v-model="testPath" type="text" class="input-textlike"
-        placeholder="/mnt/hdd" />
-      <p class="text-danger" v-if="testPathFeedback">{{ testPathFeedback }}</p>
-    </div>
-
-    <div id="buttonDiv">
-      <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="launchTests()"
-        :disabled="!pathValid || testInProgress || !numberValid || !runtimeValid">Launch</button>
-      <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2" :disabled="testInProgress || !testCompleted"
-        @click="genSheet(results)">Download
-        Report</button>
-    </div>
-
-    <div id="outputDiv">
-      <div class="progress-container progress-description-left mt-1" :class="{ hidden: hiddenProgBar }">
-        <div class="progress-description">
-          <div class="flex justify-between mb-1">
-            <span class="text-secondary float-left" :class="{ hidden: hiddenProgBar }">{{
-                benchmarkFeedback
-            }}</span>
-            <span ref="benchPercent" class="text-secondary float-right" :class="{ hidden: hiddenProgBar }">{{
-                progPercent.toFixed(1)
-            }}%</span>
+      <div id="benchmarkForm" class="max-w-4xl card mx-auto w-full text-left">
+        <div class="card-body gap-content flex flex-col items-stretch">
+          <div id="toolDiv">
+            <label class="text-label">Benchmark Tool</label>
+            <select id="benchmarkTool" v-model="benchmarkTool" class="input-textlike w-full">
+              <option value="fio" selected>FIO</option>
+            </select>
           </div>
-          <div class="bg-gray-200 rounded-full overflow-hidden" :class="{ hidden: hiddenProgBar }">
-            <div class="h-4 bg-slate-500 rounded-full" :style="{ width: `${progPercent}%` }">
+
+          <div id="typeDiv">
+            <label class="text-label">Benchmark Type</label>
+            <select id="benchmarkType" v-model="benchmarkType" class="input-textlike w-full">
+              <option value="throughput">Max Throughput</option>
+              <option value="iops">Max IOPS</option>
+              <option value="spectrum">Performance Spectrum</option>
+            </select>
+          </div>
+
+          <div id="sizeDiv">
+            <label class="text-label mr-2">File Size</label>
+            <div class="relative rounded-md shadow-sm inline w-full">
+              <input @change="fileSizeNum()" id="fileSize" v-model="fileSize" type="text"
+                class="pr-12 input-textlike w-full sm:w-auto" />
+              <div class="absolute inset-y-0 right-0 flex items-center">
+                <label class="sr-only">Unit</label>
+                <select id="fileSizeUnit" v-model="fileSizeUnit"
+                  class="input-textlike border-transparent bg-transparent">
+                  <option :value="1024 ** 2">MiB</option>
+                  <option :value="1024 ** 3">GiB</option>
+                </select>
+              </div>
+            </div>
+            <p class="text-danger" v-if="fileSizeNumFeedback">{{ fileSizeNumFeedback }}</p>
+          </div>
+
+          <div id="depthDiv">
+            <label class="text-label mr-2">IO Depth</label>
+            <select id="ioDepth" v-model="ioDepth" class="input-textlike bg-transparent">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="4">4</option>
+              <option value="8">8</option>
+              <option value="16" selected>16</option>
+              <option value="32">32</option>
+              <option value="64">64</option>
+              <option value="128">128</option>
+            </select>
+          </div>
+
+          <div id="timeDiv">
+            <label class="text-label mr-2">Runtime</label>
+            <input @change="runtimeCheck()" id="runtime" v-model="runtime" type="number" class="input-textlike"
+              default="2" />
+            <p class="text-danger" v-if="runtimeFeedback">{{ runtimeFeedback }}</p>
+          </div>
+
+          <div id="pathDiv">
+            <label class="text-label mr-2">Test Path</label>
+            <input @change="validateFilePath()" id="testPath" v-model="testPath" type="text" class="input-textlike"
+              placeholder="/mnt/hdd" />
+            <p class="text-danger" v-if="testPathFeedback">{{ testPathFeedback }}</p>
+          </div>
+
+          <div id="outputDiv">
+            <div class="progress-container progress-description-left mt-1" :class="{ hidden: hiddenProgBar }">
+              <div class="progress-description">
+                <div class="flex justify-between mb-1">
+                  <span class="text-default float-left" :class="{ hidden: hiddenProgBar }">{{
+                      benchmarkFeedback
+                  }}</span>
+                  <span ref="benchPercent" class="text-default float-right" :class="{ hidden: hiddenProgBar }">{{
+                      progPercent.toFixed(1)
+                  }}%</span>
+                </div>
+                <div class="bg-gray-200 rounded-full overflow-hidden" :class="{ hidden: hiddenProgBar }">
+                  <div class="h-4 bg-slate-500 rounded-full" :style="{ width: `${progPercent}%` }">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="benchmark-output mt-6 text-center float-left" :class="{ hidden: hiddenOutput }">
+              <label class="text-label mr-2">Download Format</label>
+              <select id="downloadFormat" v-model="downloadFormat" class="input-textlike bg-transparent">
+                <option value="xlsx">XLSX</option>
+                <option value="csv">CSV</option>
+                <option value="ods">ODS</option>
+              </select>
+              <div class="float-right ml-10" :class="{ hidden: hiddenChart }">
+                <label class="text-label mr-2">Chart Output</label>
+                <select v-model="chartType" class="switcher input-textlike bg-transparent"
+                  :class="{ hidden: hiddenChart }">
+                  <option id="chart-type-iops" value="iops" selected>IOPS</option>
+                  <option id="chart-type-bandwidth" value="bandwidth">Bandwidth</option>
+                </select>
+              </div>
             </div>
           </div>
+
+          <div id="chartDiv">
+            <BarChart id="chart" ref="chartRef" :key="componentKey" :chartData="results" :labels="recordSizes"
+              :dataType="chartType" class="bg-white" v-if="!hiddenChart" />
+          </div>
+
         </div>
-      </div>
-      <div class="benchmark-output mt-6 text-center float-left" :class="{ hidden: hiddenOutput }">
-        <label class="text-label mr-2">Download Format</label>
-        <select id="downloadFormat" v-model="downloadFormat" class="input-textlike bg-transparent">
-          <option value="xlsx">XLSX</option>
-          <option value="csv">CSV</option>
-          <option value="ods">ODS</option>
-        </select>
-        <div class="float-right ml-10" :class="{ hidden: hiddenChart }">
-          <label class="text-label mr-2">Chart Output</label>
-          <select v-model="chartType" class="switcher input-textlike bg-transparent" :class="{ hidden: hiddenChart }">
-            <option id="chart-type-iops" value="iops" selected>IOPS</option>
-            <option id="chart-type-bandwidth" value="bandwidth">Bandwidth</option>
-          </select>
+        <div id="buttonDiv" class="card-footer button-group-row">
+          <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="launchTests()"
+            :disabled="!pathValid || testInProgress || !numberValid || !runtimeValid">Launch</button>
+          <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2"
+            :disabled="testInProgress || !testCompleted" @click="genSheet(results)">Download
+            Report</button>
         </div>
+
       </div>
     </div>
-
-    <div id="chartDiv">
-      <BarChart id="chart" ref="chartRef" :key="componentKey" :chartData="results" :labels="recordSizes"
-        :dataType="chartType" v-if="!hiddenChart" />
-    </div>
-
   </div>
-
 </template>
 
 <script setup>
@@ -119,6 +130,9 @@ import { ref, computed, watch } from "vue";
 import mergeDeep from "./assignObjectRecursive";
 import * as XLSX from 'xlsx/xlsx.mjs';
 import BarChart from './components/BarChart.vue';
+import { HoustonHeader } from "@45drives/cockpit-vue-components";
+import "@45drives/cockpit-vue-components/dist/style.css";
+import { pluginVersion } from "./version";
 
 const benchmarkTool = ref('fio');
 const benchmarkType = ref('throughput');
