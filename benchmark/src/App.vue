@@ -111,10 +111,10 @@
 
         </div>
         <div id="buttonDiv" class="card-footer button-group-row">
-          <button id="launchBenchmarkBtn" class="btn btn-primary mt-2 mr-2" @click="launchTests()"
+          <button id="launchBenchmarkBtn" class="btn btn-primary" @click="launchTests()"
             :disabled="!pathValid || testInProgress || !numberValid || !runtimeValid">Launch</button>
-          <button id="downloadBenchmarkBtn" class="btn btn-primary mt-2 ml-2"
-            :disabled="testInProgress || !testCompleted" @click="genSheet(results)">Download
+          <button id="downloadBenchmarkBtn" class="btn btn-primary" :disabled="testInProgress || !testCompleted"
+            @click="genSheet(results)">Download
             Report</button>
         </div>
 
