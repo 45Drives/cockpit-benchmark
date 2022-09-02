@@ -27,6 +27,9 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Fri Sep 02 2022 Jordan Keough <jkeough@45drives.com> 2.0.1-1
+- add darkmode
+- cleaned up layout
 * Thu Sep 01 2022 Jordan Keough <jkeough@45drives.com> 2.0.0-2
 - Removed Vue favicon
 * Thu Sep 01 2022 Jordan Keough <jkeough@45drives.com> 2.0.0-1

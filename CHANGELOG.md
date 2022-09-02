@@ -1,3 +1,4 @@
-## Cockpit Benchmark 2.0.0-2
+## Cockpit Benchmark 2.0.1-1
 
-* Removed Vue favicon
+* add darkmode
+* cleaned up layout
