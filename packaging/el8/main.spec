@@ -27,6 +27,8 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Mon Oct 17 2022 Dawson Della Valle <ddellavalle@45drives.com> 2.1.0-2
+- Stable release for 2.0 updates
 * Fri Sep 02 2022 Jordan Keough <jkeough@45drives.com> 2.0.1-1
 - add darkmode
 - cleaned up layout

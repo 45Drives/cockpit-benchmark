@@ -1,3 +1,9 @@
+cockpit-benchmark (2.1.0-2focal) focal; urgency=medium
+
+  * Stable release for 2.0 updates
+
+ -- Dawson Della Valle <ddellavalle@45drives.com>  Mon, 17 Oct 2022 07:32:11 -0300
+
 cockpit-benchmark (2.0.1-1focal) focal; urgency=medium
 
   * add darkmode
