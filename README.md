@@ -1,3 +1,3 @@
 # Cockpit Benchmark
 
-A Storage Benchmark Utility for Cockpit.
+A Visual Storage Benchmark Utility for Cockpit.

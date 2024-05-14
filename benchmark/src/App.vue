@@ -177,13 +177,18 @@ const forceRerender = () => {
 };
 
 async function validateFilePath() {
-  let result = true;
-  testPathFeedback.value = '';
-  if (!(await checkIfExists(testPath.value))) {
-    result = false;
-    testPathFeedback.value = 'Path does not exist';
-  }
-  pathValid.value = result;
+	let result = true;
+	testPathFeedback.value = '';
+	if (testPath.value !== '') {
+		if (!(await checkIfExists(testPath.value))) {
+			result = false;
+			testPathFeedback.value = 'Path does not exist';
+		} 
+	} else {
+		result = false;
+		testPathFeedback.value = 'Path is required';
+	}
+	pathValid.value = result;
 }
 
 const checkIfExists = async (path) => {
@@ -216,52 +221,55 @@ function runtimeCheck() {
 }
 
 async function launchTests() {
-  forceRerender();
-  hiddenOutput.value = true;
-  hiddenProgBar.value = false;
-  testCompleted.value = false;
-  testInProgress.value = true;
-  benchmarkFeedback.value = 'Testing...';
+	await validateFilePath();
+	if (pathValid.value) {
+		forceRerender();
+		hiddenOutput.value = true;
+		hiddenProgBar.value = false;
+		testCompleted.value = false;
+		testInProgress.value = true;
+		benchmarkFeedback.value = 'Testing...';
 
-  const testTypes = ['write', 'read', 'randread', 'randwrite'];
-  const testResults = [];
-  recordSizes.value = [];
-  const fileName = 'FIO-Benchmark';
+		const testTypes = ['write', 'read', 'randread', 'randwrite'];
+		const testResults = [];
+		recordSizes.value = [];
+		const fileName = 'FIO-Benchmark';
 
-  if (benchmarkType.value == 'throughput') {
-    recordSizes.value.push('1M');
-    chartType.value = 'bandwidth';
-  } else if (benchmarkType.value == 'iops') {
-    recordSizes.value.push('4k');
-  } else if (benchmarkType.value == 'spectrum') {
-    recordSizes.value.push('4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M');
-  }
-  progPercent.value = 0;
-  for (const recordSize of recordSizes.value) {
-    const result = await runFioJobs({
-      threadCount: 1,
-      recordSize,
-      recordSizes: recordSizes.value,
-      fileName,
-      fileSize: testSize.value,
-      testPath: testPath.value,
-      ioDepth: ioDepth.value,
-      runtime: runtime.value,
-    }, testTypes.length)
+		if (benchmarkType.value == 'throughput') {
+			recordSizes.value.push('1M');
+			chartType.value = 'bandwidth';
+		} else if (benchmarkType.value == 'iops') {
+			recordSizes.value.push('4k');
+		} else if (benchmarkType.value == 'spectrum') {
+			recordSizes.value.push('4k', '8k', '16k', '32k', '64k', '128k', '512k', '1M');
+		}
+		progPercent.value = 0;
+		for (const recordSize of recordSizes.value) {
+			const result = await runFioJobs({
+			threadCount: 1,
+			recordSize,
+			recordSizes: recordSizes.value,
+			fileName,
+			fileSize: testSize.value,
+			testPath: testPath.value,
+			ioDepth: ioDepth.value,
+			runtime: runtime.value,
+			}, testTypes.length)
 
-    testResults.push(result)
-  }
+			testResults.push(result)
+		}
 
-  results.value = testResults;
+		results.value = testResults;
 
-  benchmarkFeedback.value = 'Testing completed.';
-  testInProgress.value = false;
-  testCompleted.value = true;
-  hiddenOutput.value = false;
-  hiddenChart.value = false;
+		benchmarkFeedback.value = 'Testing completed.';
+		testInProgress.value = false;
+		testCompleted.value = true;
+		hiddenOutput.value = false;
+		hiddenChart.value = false;
 
-  let file = fileName + '.0.0';
-  await deleteFiles(file);
+		let file = fileName + '.0.0';
+		await deleteFiles(file);
+	} 
 }
 
 async function runFioJobs({
