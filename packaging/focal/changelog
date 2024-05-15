@@ -1,3 +1,9 @@
+cockpit-benchmark (2.1.1-1focal) focal; urgency=medium
+
+  * Updates dependencies
+
+ -- Jordan Keough <jkeough@45drives.com>  Wed, 15 May 2024 05:34:46 -0300
+
 cockpit-benchmark (2.1.0-2focal) focal; urgency=medium
 
   * Stable release for 2.0 updates
