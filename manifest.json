@@ -27,13 +27,12 @@
             "python3",
             "fio"
         ],
-        "el": {
-            "el8": [
-                "cockpit",
-                "python3",
-                "fio"
-            ]
-        }
+        "el": [
+            "cockpit",
+            "python3",
+            "fio"
+        ]
+        
     },
     "releases": [
         {
