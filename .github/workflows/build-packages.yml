@@ -60,7 +60,7 @@ jobs:
       - prebuild
       - build
       - sign
-    runs-on: buildinator-group
+    runs-on: buildinator-5
     steps:
       - id: push_local
         name: Push packages into local repository
