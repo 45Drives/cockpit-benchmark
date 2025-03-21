@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [ "$1" == "remove" ] || [ "$1" == "purge" ]; then
+    rm -rf /usr/share/doc/cockpit-benchmark/*
+fi
