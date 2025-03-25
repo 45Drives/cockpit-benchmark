@@ -6,8 +6,7 @@ License: {{ license }}
 URL: {{ git_url }}
 Source0: %{name}-%{version}.tar.gz
 BuildArch: {{ architecture.rocky }}
-Requires: {{ dependencies.rocky_common | join(',') }}
-
+Requires: {{ dependencies.rocky_common | join(', ') }}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
@@ -15,17 +14,18 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 {{ title }}
 {{ description }}
 
+
 %prep
 %setup -q
 
 %build
-make OS_PACKAGE_RELEASE=el8
+make
 
 %install
 make DESTDIR=%{buildroot} install
 
 %files
-/usr/share/cockpit/file-sharing/*
+/usr/share/cockpit/benchmark/*
 
 %changelog
 * Thu Feb 06 2025 Brett Kelly <bkelly@45drives.com> 2.1.1-1
