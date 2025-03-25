@@ -2,7 +2,7 @@
     "schema_version": "45D_AP_V2.0",
     "name": "cockpit-benchmark",
     "title": "Cockpit Benchmark",
-    "stable": false,
+    "stable": true,
     "version": "2.1.1",
     "build_number": "1",
     "author": "Dawson Della Valle <ddellavalle@45drives.com>",
@@ -26,24 +26,33 @@
             "cockpit",
             "python3",
             "fio"
-        ]
-        
+        ] 
     },
     "builds": [
         {
-            "image": "ci.cr.45d.io/ci/simple/ubuntu-focal:1",
+            "group": "ubuntu",
             "os_name": "ubuntu-focal",
-            "group": "ubuntu"
+            "image": "ci.cr.45d.io/ci/simple/ubuntu-focal:1"
         },
         {
             "group": "debian",
             "os_name": "debian-bookworm",
             "image": "ci.cr.45d.io/ci/simple/ubuntu-jammy:1"
-	},
-	{
-            "image": "ci.cr.45d.io/ci/simple/rocky-el8:1",
+        },
+        {
+            "group": "ubuntu",
+            "os_name": "ubuntu-jammy",
+            "image": "ci.cr.45d.io/ci/simple/ubuntu-jammy:1"
+        },
+        {
+            "group": "rocky",
             "os_name": "rocky-el8",
-            "group": "rocky"
+            "image": "ci.cr.45d.io/ci/simple/rocky-el8:1"
+        },
+        {
+            "group": "rocky",
+            "os_name": "rocky-el9",
+            "image": "ci.cr.45d.io/ci/simple/rocky-el9:1"
         }
     ],
     "repos": [

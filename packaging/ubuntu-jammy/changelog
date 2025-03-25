@@ -1,0 +1,5 @@
+cockpit-benchmark (2.1.1-1jammy) jammy; urgency=medium
+
+  * Initial build for jammy
+
+ -- Brett Kelly <bkelly@45drives.com>  Thu, 06 Feb 2025 14:10:25 -0400
