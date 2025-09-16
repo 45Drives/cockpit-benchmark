@@ -26,8 +26,8 @@ A Visual Storage Benchmark Utility for Cockpit that lets you run quick storage b
 
 ## Installation
 
-* From packages
-  * If your platform includes a packaged build of this plugin, install it through your standard package manager and open Cockpit → Benchmarks.
+* install with dnf or apt 
+  * dnf install cockpit-benchmark
 
 
 ## Usage
