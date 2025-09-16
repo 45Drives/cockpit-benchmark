@@ -33,32 +33,40 @@ export default {
           datasets: [
             {
               label: "Reads",
+              // data: chartData.map(result =>
+              //   Number(result[dataType].read)),
               data: chartData.map(result =>
-                Number(result[dataType].read)),
+                Number(result?.[dataType]?.read ?? 0)),
               backgroundColor: ['#94a3b8'],
               borderColor: ['#94a3b8'],
               borderWidth: 1
             },
             {
               label: "Writes",
+              // data: chartData.map(result =>
+              //   Number(result[dataType].write)),
               data: chartData.map(result =>
-                Number(result[dataType].write)),
+                Number(result?.[dataType]?.write ?? 0)),
               backgroundColor: ['#64748b'],
               borderColor: ['#64748b'],
               borderWidth: 1
             },
             {
               label: "Random Reads",
+              // data: chartData.map(result =>
+              //   Number(result[dataType].randread)),
               data: chartData.map(result =>
-                Number(result[dataType].randread)),
+                Number(result?.[dataType]?.randread ?? 0)),
               backgroundColor: ['#475569'],
               borderColor: ['#475569'],
               borderWidth: 1
             },
             {
               label: "Random Writes",
+              // data: chartData.map(result =>
+              //   Number(result[dataType].randwrite)),
               data: chartData.map(result =>
-                Number(result[dataType].randwrite)),
+                Number(result?.[dataType]?.randwrite ?? 0)),
               backgroundColor: ['#334155'],
               borderColor: ['#334155'],
               borderWidth: 1

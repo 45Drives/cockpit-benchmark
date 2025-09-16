@@ -288,15 +288,35 @@ async function runFioJobs({
   }
   return results;
 }
+const ioEngine = computed(() => Number(ioDepth.value) > 1 ? 'libaio' : 'psync');
 
 async function runFioJob({
   threadCount, recordSize, fileName, fileSize, testPath, ioDepth, runtime, testType
 }) {
   try {
-    let args = [benchmarkTool.value, '--directory', testPath, '--name', fileName, '--rw', testType, '-bs', recordSize, '--size', fileSize, '--numjobs', threadCount, '--time_based', '--ramp_time', '5', '--runtime', runtime, '--iodepth', ioDepth, '--group_reporting', '--output-format=json'];
-
+    let args = [
+        benchmarkTool.value,
+        '--directory', testPath,
+        '--name', fileName,
+        '--rw', testType,
+        '--bs', recordSize,
+        '--size', fileSize,
+        '--numjobs', threadCount,
+        '--time_based', '--ramp_time', '5',
+        '--runtime', runtime,
+        '--iodepth', ioDepth,
+        '--ioengine', ioEngine.value,
+        '--direct', '1',
+        '--group_reporting',
+        '--eta=never',
+        '--output-format=json'
+      ];
     const proc = await useSpawn(args, { superuser: 'try' }).promise();
-    const output = JSON.parse(proc.stdout);
+
+    const raw = String(proc.stdout ?? '');
+    const start = raw.indexOf('{');
+    if (start < 0) throw new Error(`fio did not return JSON: ${raw.slice(0, 120)}`);
+    const output = JSON.parse(raw.slice(start));
 
     const [job] = output.jobs;
 
@@ -311,7 +331,7 @@ async function runFioJob({
             write: (job.write.iops.toFixed(0))
           },
           bandwidth: {
-            write: ((job.write.bw / 1000) / runtime).toFixed(2)
+            write: (job.write.bw / 1024).toFixed(2)
           },
         }
       case 'read':
@@ -320,7 +340,7 @@ async function runFioJob({
             read: (job.read.iops.toFixed(0))
           },
           bandwidth: {
-            read: ((job.read.bw / 1000) / runtime).toFixed(2)
+            read: (job.read.bw / 1024).toFixed(2)
           },
         }
       case 'randread':
@@ -329,7 +349,7 @@ async function runFioJob({
             randread: (job.read.iops.toFixed(0))
           },
           bandwidth: {
-            randread: ((job.read.bw / 1000) / runtime).toFixed(2)
+            randread: (job.read.bw / 1024).toFixed(2)
           },
         }
       case 'randwrite':
@@ -338,7 +358,7 @@ async function runFioJob({
             randwrite: (job.write.iops.toFixed(0))
           },
           bandwidth: {
-            randwrite: ((job.write.bw / 1000) / runtime).toFixed(2)
+            randwrite: (job.write.bw / 1024).toFixed(2)
           },
         }
     }
@@ -351,21 +371,22 @@ async function runFioJob({
 
 const deleteFiles = async (file) => {
   try {
-    await useSpawn(['sh', '-c', `rm -f ${testPath.value}/${file}`]).promise();
+    // await useSpawn(['sh', '-c', `rm -f ${testPath.value}/${file}`]).promise();
+    await useSpawn(['sh', '-c', `rm -f ${testPath.value}/${file}`], { superuser: 'try' }).promise();
   } catch (error) {
     console.error(error);
   }
 }
 
 function genSheet(data) {
-  if (data === null) return;
+  if (!Array.isArray(data) || data.length === 0) return;
 
   const date = data.date ?? new Date();
 
   const aoa = [
     [
       'Tool',
-      data[0].testType !== null ? 'Test Type' : null,
+      data[0].type ? 'Test Type' : null,
       'Record Size',
       'Date',
       'Reads (MB/s)',
@@ -381,14 +402,14 @@ function genSheet(data) {
       result.type ?? null,
       result.recSize,
       date.toLocaleString(),
-      result.bandwidth.read,
-      result.bandwidth.write,
-      result.bandwidth.randread,
-      result.bandwidth.randwrite,
-      result.iops.read,
-      result.iops.write,
-      result.iops.randread,
-      result.iops.randwrite,
+      result.bandwidth?.read ?? '',
+      result.bandwidth?.write ?? '',
+      result.bandwidth?.randread ?? '',
+      result.bandwidth?.randwrite ?? '',
+      result.iops?.read ?? '',
+      result.iops?.write ?? '',
+      result.iops?.randread ?? '',
+      result.iops?.randwrite ?? '',
     ]))
   ];
 
