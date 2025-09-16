@@ -14,7 +14,7 @@
     },
     "description": "A Storage Benchmark Utility for Cockpit.",
     "defaults": {
-        "urgency": "medium"
+        "change_urgency": "medium"
     },
     "dependencies": {
         "ubuntu_common": [
