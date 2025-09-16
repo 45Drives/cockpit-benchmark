@@ -1,3 +1,9 @@
+cockpit-benchmark (2.1.2-1focal) focal; urgency=medium
+
+  * Fixes chart display bug on newer OS versions -> from Git Issues
+
+ -- Jordan Keough <jkeough@45drives.com>  Tue, 16 Sep 2025 09:57:26 -0300
+
 cockpit-benchmark (2.1.1-1focal) focal; urgency=medium
 
   * Updates dependencies

@@ -1,3 +1,3 @@
-## Cockpit Benchmark 2.1.1-1
+## Cockpit Benchmark 2.1.2-1
 
-* Updates dependencies
+* Fixes chart display bug on newer OS versions -> from Git Issues
