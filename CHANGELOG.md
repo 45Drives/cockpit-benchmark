@@ -1,3 +1,3 @@
-## Cockpit Benchmark 2.1.2-1
+## Cockpit Benchmark 2.1.2--2
 
-* Fixes chart display bug on newer OS versions -> from Git Issues
+* Fixes ubuntu-bookworm build using proper package builder

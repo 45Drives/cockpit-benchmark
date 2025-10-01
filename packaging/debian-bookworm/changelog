@@ -1,3 +1,9 @@
+cockpit-benchmark (2.1.2--2bookworm) bookworm; urgency=medium
+
+  * Fixes ubuntu-bookworm build using proper package builder
+
+ -- Jordan Keough <jkeough@45drives.com>  Wed, 01 Oct 2025 05:32:37 -0300
+
 cockpit-benchmark (2.1.2-1bookworm) bookworm; urgency=medium
 
   * Fixes chart display bug on newer OS versions -> from Git Issues
