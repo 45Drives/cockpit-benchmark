@@ -4,7 +4,7 @@ cockpit-benchmark (2.1.2-3focal) focal; urgency=medium
 
  -- Jordan Keough <jkeough@45drives.com>  Wed, 01 Oct 2025 05:36:13 -0300
 
-cockpit-benchmark (2.1.2--2focal) focal; urgency=medium
+cockpit-benchmark (2.1.2-2focal) focal; urgency=medium
 
   * Fixes ubuntu-bookworm build using proper package builder
 
