@@ -4,7 +4,7 @@
     "title": "Cockpit Benchmark",
     "stable": true,
     "version": "2.1.2",
-    "build_number": "4",
+    "build_number": "1",
     "author": "Dawson Della Valle <ddellavalle@45drives.com>",
     "git_url": "https://github.com/45Drives/cockpit-benchmark",
     "license": "GPL-3.0+",
