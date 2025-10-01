@@ -37,7 +37,7 @@
         {
             "group": "debian",
             "os_name": "debian-bookworm",
-            "image": "ci.cr.45d.io/ci/simple/ubuntu-bookworm:1"
+            "image": "ci.cr.45d.io/ci/simple/debian-bookworm:1"
         },
         {
             "group": "ubuntu",
