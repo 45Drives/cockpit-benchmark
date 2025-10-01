@@ -1,3 +1,3 @@
-## Cockpit Benchmark 2.1.2--2
+## Cockpit Benchmark 2.1.2-3
 
-* Fixes ubuntu-bookworm build using proper package builder
+* Fixes actual builder name - had ubuntu-bookworm instead of debian-bookworm
