@@ -1,3 +1,3 @@
-## Cockpit Benchmark 2.1.2-3
+## Cockpit Benchmark 2.1.2-4
 
-* Fixes actual builder name - had ubuntu-bookworm instead of debian-bookworm
+* Extra dash in build # earlier caused changelog issues

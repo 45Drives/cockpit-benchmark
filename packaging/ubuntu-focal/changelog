@@ -1,3 +1,9 @@
+cockpit-benchmark (2.1.2-4focal) focal; urgency=medium
+
+  * Extra dash in build # earlier caused changelog issues
+
+ -- Jordan Keough <jkeough@45drives.com>  Wed, 01 Oct 2025 05:39:30 -0300
+
 cockpit-benchmark (2.1.2-3focal) focal; urgency=medium
 
   * Fixes actual builder name - had ubuntu-bookworm instead of debian-bookworm

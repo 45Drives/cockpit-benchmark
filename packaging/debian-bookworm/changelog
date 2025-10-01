@@ -1,3 +1,9 @@
+cockpit-benchmark (2.1.2-4bookworm) bookworm; urgency=medium
+
+  * Extra dash in build # earlier caused changelog issues
+
+ -- Jordan Keough <jkeough@45drives.com>  Wed, 01 Oct 2025 05:39:30 -0300
+
 cockpit-benchmark (2.1.2-3bookworm) bookworm; urgency=medium
 
   * Fixes actual builder name - had ubuntu-bookworm instead of debian-bookworm
