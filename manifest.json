@@ -2,7 +2,7 @@
     "schema_version": "45D_AP_V2.0",
     "name": "cockpit-benchmark",
     "title": "Cockpit Benchmark",
-    "stable": true,
+    "stable": false,
     "version": "2.1.2",
     "build_number": "1",
     "author": "Dawson Della Valle <ddellavalle@45drives.com>",
@@ -43,7 +43,7 @@
         {
             "group": "debian",
             "os_name": "debian-trixie",
-            "image": "ci.cr.45d.io/ci/simple/debian-trixie:1"
+            "image": "ci.cr.45d.io/ci/simple/debian-trixie:2"
         },
         {
             "group": "ubuntu",
