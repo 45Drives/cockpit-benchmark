@@ -124,14 +124,15 @@
 </template>
 
 <script setup>
-import "@45drives/cockpit-css/src/index.css";
-import { useSpawn, objectURLDownload } from "@45drives/cockpit-helpers";
+import "@45drives/houston-common-css/src/index.css";
+import { legacy, Download } from "@45drives/houston-common-lib";
+const { useSpawn } = legacy;
 import { ref, computed, watch } from "vue";
 import mergeDeep from "./assignObjectRecursive";
 import * as XLSX from 'xlsx/xlsx.mjs';
 import BarChart from './components/BarChart.vue';
-import { HoustonHeader } from "@45drives/cockpit-vue-components";
-import "@45drives/cockpit-vue-components/dist/style.css";
+import { HoustonHeader } from "@45drives/houston-common-ui";
+import "@45drives/houston-common-ui/style.css";
 import { pluginVersion } from "./version";
 
 const benchmarkTool = ref('fio');
@@ -430,7 +431,7 @@ function genSheet(data) {
   } else {
     const fileData = XLSX.write(wb, { bookType: downloadFormat.value, type: 'array' });
 
-    objectURLDownload(fileData, fileName);
+    Download.blobParts([fileData], fileName);
   }
 
 }

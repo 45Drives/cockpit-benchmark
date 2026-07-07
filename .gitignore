@@ -12,4 +12,10 @@ debian/.debhelper
 # build ouptut
 dist
 
+# yarn/node
+node_modules/
+.yarn/
+.yarnrc.yml
+yarn.lock
+
 upload.sh
