@@ -1,3 +1,3 @@
-## Cockpit Benchmark 2.1.2-4
+## Cockpit Benchmark 2.1.3-1
 
-* Extra dash in build # earlier caused changelog issues
+* fix: use explicit cockpit deps for debian to avoid network-manager
