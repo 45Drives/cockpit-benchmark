@@ -9,15 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@45drives/cockpit-css": "^0.1.12",
-    "@45drives/cockpit-helpers": "^0.1.19",
+    "@45drives/houston-common-css": "workspace:^",
+    "@45drives/houston-common-lib": "workspace:^",
+    "@45drives/houston-common-ui": "workspace:^",
     "@tailwindcss/forms": "^0.5.2",
     "chart.js": "^4.4.2",
     "vue": "^3.2.37",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
   },
   "devDependencies": {
-    "@45drives/cockpit-vue-components": "^0.1.0-beta2",
     "@vitejs/plugin-vue": "^3.0.0",
     "autoprefixer": "^10.4.8",
     "postcss": "^8.4.16",

@@ -28,6 +28,14 @@ make DESTDIR=%{buildroot} install
 /usr/share/cockpit/benchmark/*
 
 %changelog
+* Wed Jul 08 2026 Rachit Hans <rhans@45drives.com> 2.1.3-1
+- fix: use explicit cockpit deps for debian to avoid network-manager
+* Wed Oct 01 2025 Jordan Keough <jkeough@45drives.com> 2.1.2-4
+- Extra dash in build # earlier caused changelog issues
+* Wed Oct 01 2025 Jordan Keough <jkeough@45drives.com> 2.1.2-3
+- Fixes actual builder name - had ubuntu-bookworm instead of debian-bookworm
+* Wed Oct 01 2025 Jordan Keough <jkeough@45drives.com> 2.1.2-2
+- Fixes ubuntu-bookworm build using proper package builder
 * Tue Sep 16 2025 Jordan Keough <jkeough@45drives.com> 2.1.2-1
 - Fixes chart display bug on newer OS versions -> from Git Issues
 * Wed May 15 2024 Jordan Keough <jkeough@45drives.com> 2.1.1-1

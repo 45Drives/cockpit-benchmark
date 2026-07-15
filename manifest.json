@@ -2,15 +2,16 @@
     "schema_version": "45D_AP_V2.0",
     "name": "cockpit-benchmark",
     "title": "Cockpit Benchmark",
-    "stable": true,
-    "version": "2.1.2",
+    "stable": false,
+    "version": "2.1.3",
     "build_number": "1",
     "author": "Dawson Della Valle <ddellavalle@45drives.com>",
     "git_url": "https://github.com/45Drives/cockpit-benchmark",
     "license": "GPL-3.0+",
     "architecture": {
         "ubuntu": "all",
-        "rocky": "noarch"
+        "rocky": "noarch",
+        "debian": "all"
     },
     "description": "A Storage Benchmark Utility for Cockpit.",
     "defaults": {
@@ -26,6 +27,15 @@
             "cockpit",
             "python3",
             "fio"
+        ],
+        "debian_common": [
+            "cockpit-ws",
+            "cockpit-bridge",
+            "cockpit-system",
+            "cockpit-storaged",
+            "cockpit-packagekit",
+            "python3",
+            "fio"
         ]
     },
     "builds": [
@@ -37,7 +47,12 @@
         {
             "group": "debian",
             "os_name": "debian-bookworm",
-            "image": "ci.cr.45d.io/ci/simple/ubuntu-bookworm:1"
+            "image": "ci.cr.45d.io/ci/simple/debian-bookworm:1"
+        },
+        {
+            "group": "debian",
+            "os_name": "debian-trixie",
+            "image": "ci.cr.45d.io/ci/simple/debian-trixie:1"
         },
         {
             "group": "ubuntu",
@@ -61,7 +76,7 @@
     ],
     "changelog": {
         "urgency": "medium",
-        "version": "2.1.2",
+        "version": "2.1.3",
         "build_number": "1",
         "date": null,
         "packager": "Dawson Della Valle <ddellavalle@45drives.com>",
